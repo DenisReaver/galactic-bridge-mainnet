@@ -759,62 +759,132 @@ export default function GalacticBridge() {
               <p><strong>ARC Mainnet:</strong> <span className="text-emerald-400 break-all">{arcAddress || "—"}</span></p>
             </div>
 
-            {/* 2. Mint */}
-            <div>
-              <h2 className="text-2xl font-semibold mb-4 text-white">2. Mint Tokens</h2>
-              <div className="flex gap-3 flex-wrap">
-                <input type="number" value={mintAmount} onChange={e => setMintAmount(e.target.value)} className="bg-white/10 border border-white/20 rounded-2xl px-5 py-3 w-48" />
-                <button onClick={() => mint(ETHEREUM_CHAIN_ID)} disabled={!ethAddress} className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 py-4 rounded-2xl">Mint Ethereum</button>
-                <button onClick={() => mint(BASE_CHAIN_ID)} disabled={!baseAddress} className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 py-4 rounded-2xl">Mint Base</button>
-                <button onClick={() => mint(OPTIMISM_CHAIN_ID)} disabled={!opAddress} className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 py-4 rounded-2xl">Mint Optimism</button>
-                <button onClick={() => mint(ARBITRUM_CHAIN_ID)} disabled={!arbAddress} className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 py-4 rounded-2xl">Mint Arbitrum</button>
-                <button onClick={() => mint(ARC_MAINNET_CHAIN_ID)} disabled={!arcAddress} className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 py-4 rounded-2xl">Mint ARC</button>
-              </div>
-            </div>
+{/* 2. Mint Tokens */}
+<div>
+  <h2 className="text-2xl font-semibold mb-4 text-white">2. Mint Tokens</h2>
+  
+  <div className="flex flex-wrap items-end gap-4">
+    <div>
+      <label className="block text-sm text-gray-400 mb-1">Amount</label>
+      <input 
+        type="number" 
+        value={mintAmount} 
+        onChange={(e) => setMintAmount(e.target.value)} 
+        className="bg-white/10 border border-white/20 rounded-2xl px-5 py-3 w-48 text-white focus:outline-none focus:border-white/40" 
+        placeholder="1000" 
+      />
+    </div>
 
-            {/* 3. Send */}
-            <div>
-              <h2 className="text-2xl font-semibold mb-4 text-white">3. Send via LayerZero</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm mb-1">From</label>
-                  <select value={fromNetwork} onChange={e => setFromNetwork(e.target.value as any)} className="bg-zinc-900 border border-white/20 rounded-2xl px-4 py-3 w-full">
-                    <option value="eth">Ethereum</option>
-                    <option value="base">Base</option>
-                    <option value="op">Optimism</option>
-                    <option value="arb">Arbitrum</option>
-                    <option value="arc">ARC Mainnet</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm mb-1">To</label>
-                  <select value={toNetwork} onChange={e => setToNetwork(e.target.value as any)} className="bg-zinc-900 border border-white/20 rounded-2xl px-4 py-3 w-full">
-                    <option value="eth">Ethereum</option>
-                    <option value="base">Base</option>
-                    <option value="op">Optimism</option>
-                    <option value="arb">Arbitrum</option>
-                    <option value="arc">ARC Mainnet</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm mb-1">Amount</label>
-                  <input type="number" value={sendAmount} onChange={e => setSendAmount(e.target.value)} className="bg-zinc-900 border border-white/20 rounded-2xl px-4 py-3 w-full" />
-                </div>
-              </div>
+    <button 
+      onClick={() => mint(ETHEREUM_CHAIN_ID)} 
+      disabled={!ethAddress} 
+      className="flex-1 min-w-[140px] bg-green-600 hover:bg-green-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Mint Ethereum
+    </button>
+    <button 
+      onClick={() => mint(BASE_CHAIN_ID)} 
+      disabled={!baseAddress} 
+      className="flex-1 min-w-[140px] bg-green-600 hover:bg-green-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Mint Base
+    </button>
+    <button 
+      onClick={() => mint(OPTIMISM_CHAIN_ID)} 
+      disabled={!opAddress} 
+      className="flex-1 min-w-[140px] bg-green-600 hover:bg-green-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Mint Optimism
+    </button>
+    <button 
+      onClick={() => mint(ARBITRUM_CHAIN_ID)} 
+      disabled={!arbAddress} 
+      className="flex-1 min-w-[140px] bg-green-600 hover:bg-green-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Mint Arbitrum
+    </button>
+    <button 
+      onClick={() => mint(ARC_MAINNET_CHAIN_ID)} 
+      disabled={!arcAddress} 
+      className="flex-1 min-w-[140px] bg-green-600 hover:bg-green-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Mint ARC Mainnet
+    </button>
+  </div>
+</div>
 
-              <input type="text" value={recipient} onChange={e => setRecipient(e.target.value)} placeholder="Recipient 0x..." className="bg-zinc-900 border border-white/20 rounded-2xl px-5 py-3 w-full mb-4" />
+{/* 3. Send via LayerZero */}
+<div>
+  <h2 className="text-2xl font-semibold mb-4 text-white">3. Send via LayerZero</h2>
+  
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div>
+      <label className="block text-sm text-gray-400 mb-1">From Network</label>
+      <select 
+        value={fromNetwork} 
+        onChange={(e) => setFromNetwork(e.target.value as any)} 
+        className="bg-zinc-900 border border-white/20 rounded-2xl px-5 py-3 w-full text-white"
+      >
+        <option value="eth">Ethereum</option>
+        <option value="base">Base</option>
+        <option value="op">Optimism</option>
+        <option value="arb">Arbitrum</option>
+        <option value="arc">ARC Mainnet</option>
+      </select>
+    </div>
 
-              <button onClick={sendToken} className="w-full bg-violet-600 hover:bg-violet-700 py-5 rounded-2xl text-lg font-semibold">
-                Send Tokens
-              </button>
+    <div>
+      <label className="block text-sm text-gray-400 mb-1">To Network</label>
+      <select 
+        value={toNetwork} 
+        onChange={(e) => setToNetwork(e.target.value as any)} 
+        className="bg-zinc-900 border border-white/20 rounded-2xl px-5 py-3 w-full text-white"
+      >
+        <option value="eth">Ethereum</option>
+        <option value="base">Base</option>
+        <option value="op">Optimism</option>
+        <option value="arb">Arbitrum</option>
+        <option value="arc">ARC Mainnet</option>
+      </select>
+    </div>
 
-              {lastTxHash && (
-                <div className="mt-4 p-4 bg-green-900/30 border border-green-500/30 rounded-2xl">
-                  <p className="text-green-400 break-all">Tx: {lastTxHash}</p>
-                  <button onClick={openLayerZeroScan} className="mt-3 w-full bg-green-600 hover:bg-green-700 py-3 rounded-xl">Open in LayerZero Scan</button>
-                </div>
-              )}
-            </div>
+    <div>
+      <label className="block text-sm text-gray-400 mb-1">Amount</label>
+      <input 
+        type="number" 
+        value={sendAmount} 
+        onChange={(e) => setSendAmount(e.target.value)} 
+        className="bg-zinc-900 border border-white/20 rounded-2xl px-5 py-3 w-full text-white" 
+        placeholder="100" 
+      />
+    </div>
+  </div>
+
+  <div className="mb-6">
+    <label className="block text-sm text-gray-400 mb-1">Recipient Address</label>
+    <input 
+      type="text" 
+      value={recipient} 
+      onChange={(e) => setRecipient(e.target.value)} 
+      placeholder="0x123..." 
+      className="bg-zinc-900 border border-white/20 rounded-2xl px-5 py-3 w-full text-white font-mono" 
+    />
+  </div>
+
+  <button 
+    onClick={sendToken} 
+    className="w-full bg-violet-600 hover:bg-violet-700 py-5 rounded-2xl text-lg font-semibold transition-colors"
+  >
+    Send via LayerZero
+  </button>
+
+  {lastTxHash && (
+    <div className="mt-6 p-5 bg-green-900/30 border border-green-500/30 rounded-2xl">
+      <p className="text-green-400 break-all text-sm mb-3">Tx Hash: {lastTxHash}</p>
+      <button 
+        onClick={openLayerZeroScan} 
+        className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-xl font-medium"
+      >
+        Open in LayerZero Scan →
+      </button>
+    </div>
+  )}
+</div>
 
 {/* 4. Set Peer — ПОЛНЫЙ БЛОК (все 20 направлений) */}
 <div>
