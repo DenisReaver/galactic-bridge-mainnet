@@ -816,25 +816,143 @@ export default function GalacticBridge() {
               )}
             </div>
 
-            {/* 4. Set Peer */}
-            <div>
-              <h2 className="text-2xl font-semibold mb-4 text-white">4. Set Peer (All pairs)</h2>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                {/* ARC */}
-                <button onClick={() => setPeer(ARC_MAINNET_CHAIN_ID, ETHEREUM_EID, ethAddress)} disabled={!arcAddress || !ethAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-3 rounded-2xl">ARC → Ethereum</button>
-                <button onClick={() => setPeer(ARC_MAINNET_CHAIN_ID, BASE_EID, baseAddress)} disabled={!arcAddress || !baseAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-3 rounded-2xl">ARC → Base</button>
-                <button onClick={() => setPeer(ARC_MAINNET_CHAIN_ID, OPTIMISM_EID, opAddress)} disabled={!arcAddress || !opAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-3 rounded-2xl">ARC → Optimism</button>
-                <button onClick={() => setPeer(ARC_MAINNET_CHAIN_ID, ARBITRUM_EID, arbAddress)} disabled={!arcAddress || !arbAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-3 rounded-2xl">ARC → Arbitrum</button>
+{/* 4. Set Peer — ПОЛНЫЙ БЛОК (все 20 направлений) */}
+<div>
+  <h2 className="text-2xl font-semibold mb-4 text-white">4. Set Peer (All Directions)</h2>
+  <div className="grid grid-cols-2 gap-3 text-sm">
 
-                {/* Ethereum */}
-                <button onClick={() => setPeer(ETHEREUM_CHAIN_ID, BASE_EID, baseAddress)} disabled={!ethAddress || !baseAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-3 rounded-2xl">Ethereum → Base</button>
-                <button onClick={() => setPeer(ETHEREUM_CHAIN_ID, OPTIMISM_EID, opAddress)} disabled={!ethAddress || !opAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-3 rounded-2xl">Ethereum → Optimism</button>
-                <button onClick={() => setPeer(ETHEREUM_CHAIN_ID, ARBITRUM_EID, arbAddress)} disabled={!ethAddress || !arbAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-3 rounded-2xl">Ethereum → Arbitrum</button>
-                <button onClick={() => setPeer(ETHEREUM_CHAIN_ID, ARC_MAINNET_EID, arcAddress)} disabled={!ethAddress || !arcAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-3 rounded-2xl">Ethereum → ARC</button>
+    {/* ARC Mainnet */}
+    <button 
+      onClick={() => setPeer(ARC_MAINNET_CHAIN_ID, ETHEREUM_EID, ethAddress)} 
+      disabled={!arcAddress || !ethAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      ARC → Ethereum
+    </button>
+    <button 
+      onClick={() => setPeer(ARC_MAINNET_CHAIN_ID, BASE_EID, baseAddress)} 
+      disabled={!arcAddress || !baseAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      ARC → Base
+    </button>
+    <button 
+      onClick={() => setPeer(ARC_MAINNET_CHAIN_ID, OPTIMISM_EID, opAddress)} 
+      disabled={!arcAddress || !opAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      ARC → Optimism
+    </button>
+    <button 
+      onClick={() => setPeer(ARC_MAINNET_CHAIN_ID, ARBITRUM_EID, arbAddress)} 
+      disabled={!arcAddress || !arbAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      ARC → Arbitrum
+    </button>
 
-                {/* Добавь остальные направления по аналогии при необходимости */}
-              </div>
-            </div>
+    {/* Ethereum */}
+    <button 
+      onClick={() => setPeer(ETHEREUM_CHAIN_ID, ARC_MAINNET_EID, arcAddress)} 
+      disabled={!ethAddress || !arcAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Ethereum → ARC
+    </button>
+    <button 
+      onClick={() => setPeer(ETHEREUM_CHAIN_ID, BASE_EID, baseAddress)} 
+      disabled={!ethAddress || !baseAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Ethereum → Base
+    </button>
+    <button 
+      onClick={() => setPeer(ETHEREUM_CHAIN_ID, OPTIMISM_EID, opAddress)} 
+      disabled={!ethAddress || !opAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Ethereum → Optimism
+    </button>
+    <button 
+      onClick={() => setPeer(ETHEREUM_CHAIN_ID, ARBITRUM_EID, arbAddress)} 
+      disabled={!ethAddress || !arbAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Ethereum → Arbitrum
+    </button>
+
+    {/* Base */}
+    <button 
+      onClick={() => setPeer(BASE_CHAIN_ID, ARC_MAINNET_EID, arcAddress)} 
+      disabled={!baseAddress || !arcAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Base → ARC
+    </button>
+    <button 
+      onClick={() => setPeer(BASE_CHAIN_ID, ETHEREUM_EID, ethAddress)} 
+      disabled={!baseAddress || !ethAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Base → Ethereum
+    </button>
+    <button 
+      onClick={() => setPeer(BASE_CHAIN_ID, OPTIMISM_EID, opAddress)} 
+      disabled={!baseAddress || !opAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Base → Optimism
+    </button>
+    <button 
+      onClick={() => setPeer(BASE_CHAIN_ID, ARBITRUM_EID, arbAddress)} 
+      disabled={!baseAddress || !arbAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Base → Arbitrum
+    </button>
+
+    {/* Optimism */}
+    <button 
+      onClick={() => setPeer(OPTIMISM_CHAIN_ID, ARC_MAINNET_EID, arcAddress)} 
+      disabled={!opAddress || !arcAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Optimism → ARC
+    </button>
+    <button 
+      onClick={() => setPeer(OPTIMISM_CHAIN_ID, ETHEREUM_EID, ethAddress)} 
+      disabled={!opAddress || !ethAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Optimism → Ethereum
+    </button>
+    <button 
+      onClick={() => setPeer(OPTIMISM_CHAIN_ID, BASE_EID, baseAddress)} 
+      disabled={!opAddress || !baseAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Optimism → Base
+    </button>
+    <button 
+      onClick={() => setPeer(OPTIMISM_CHAIN_ID, ARBITRUM_EID, arbAddress)} 
+      disabled={!opAddress || !arbAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Optimism → Arbitrum
+    </button>
+
+    {/* Arbitrum */}
+    <button 
+      onClick={() => setPeer(ARBITRUM_CHAIN_ID, ARC_MAINNET_EID, arcAddress)} 
+      disabled={!arbAddress || !arcAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Arbitrum → ARC
+    </button>
+    <button 
+      onClick={() => setPeer(ARBITRUM_CHAIN_ID, ETHEREUM_EID, ethAddress)} 
+      disabled={!arbAddress || !ethAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Arbitrum → Ethereum
+    </button>
+    <button 
+      onClick={() => setPeer(ARBITRUM_CHAIN_ID, BASE_EID, baseAddress)} 
+      disabled={!arbAddress || !baseAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Arbitrum → Base
+    </button>
+    <button 
+      onClick={() => setPeer(ARBITRUM_CHAIN_ID, OPTIMISM_EID, opAddress)} 
+      disabled={!arbAddress || !opAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Arbitrum → Optimism
+    </button>
+
+  </div>
+</div>
 
             {/* 5. Enforced Options */}
             <div>
