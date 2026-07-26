@@ -779,7 +779,7 @@ const deploy = async (targetChainId: number) => {
 
 {/* Manual Contract Address Input (для долгого подтверждения) */}
 <div className="bg-yellow-900/30 border border-yellow-500/40 p-6 rounded-2xl">
-  <p className="text-yellow-400 font-medium mb-3">Если адрес не подтянулся автоматически:</p>
+  <p className="text-yellow-400 font-medium mb-3">manual entry of an Ethereum contract:</p>
   <div className="flex gap-3">
     <input 
       type="text" 
@@ -804,7 +804,7 @@ const deploy = async (targetChainId: number) => {
       Save Address
     </button>
   </div>
-  <p className="text-xs text-gray-500 mt-3">Работает для любого контракта, который вы развернули вручную</p>
+  <p className="text-xs text-gray-500 mt-3">If the Ethereum contract address did not load automatically</p>
 </div>
             
 {/* 2. Mint Tokens */}
