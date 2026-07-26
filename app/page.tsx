@@ -517,29 +517,27 @@ const deploy = async (targetChainId: number) => {
       args: [name, symbol, LZ_ENDPOINT, address],
     });
 
-    alert(`✅ Transaction sent!\n\nHash: ${txHash}\n\nWaiting for confirmation...\n(Low gas = can take 30-120 seconds)`);
+    alert(`✅ Transaction sent!\n\nHash: ${txHash}\n\nWaiting for confirmation...\n(Low gas can take 30–120+ seconds)`);
 
-    // Улучшенное ожидание
     const receipt = await publicClient!.waitForTransactionReceipt({
       hash: txHash as `0x${string}`,
       confirmations: 1,
-      timeout: 240_000,     // 4 минуты
-      pollingInterval: 8000 // проверять каждые 8 секунд
+      timeout: 300_000,     // 5 минут
+      pollingInterval: 10000 // каждые 10 секунд
     });
 
     if (receipt.contractAddress) {
       saveAddress(targetChainId, receipt.contractAddress);
-      alert(`🎉 DEPLOYED SUCCESSFULLY!\n\nNetwork: ${getNetworkName(targetChainId)}\nAddress: ${receipt.contractAddress}`);
+      alert(`🎉 Successfully deployed!\n\nNetwork: ${getNetworkName(targetChainId)}\nAddress: ${receipt.contractAddress}`);
     } else {
-      alert("Transaction confirmed, but contract address not detected. Use manual check below.");
+      alert("Transaction confirmed, but contract address not found. Use manual input below.");
     }
   } catch (error: any) {
     console.error(error);
-    
     if (txHash) {
-      alert(`Transaction is still pending.\nHash: ${txHash}\n\nCheck on Etherscan and use manual address input if needed.`);
+      alert(`Transaction pending or slow.\nHash: ${txHash}\n\nCheck Etherscan and use manual address input.`);
     } else {
-      alert(`Error: ${error.message}`);
+      alert(`Deploy error: ${error.message}`);
     }
   }
 };
@@ -779,6 +777,36 @@ const deploy = async (targetChainId: number) => {
               <p><strong>ARC Mainnet:</strong> <span className="text-emerald-400 break-all">{arcAddress || "—"}</span></p>
             </div>
 
+{/* Manual Contract Address Input (для долгого подтверждения) */}
+<div className="bg-yellow-900/30 border border-yellow-500/40 p-6 rounded-2xl">
+  <p className="text-yellow-400 font-medium mb-3">Если адрес не подтянулся автоматически:</p>
+  <div className="flex gap-3">
+    <input 
+      type="text" 
+      placeholder="0x... Paste contract address from Etherscan" 
+      className="flex-1 bg-black/60 border border-yellow-500/50 rounded-2xl px-5 py-3 text-white font-mono text-sm focus:outline-none focus:border-yellow-400"
+      id="manualAddress"
+    />
+    <button 
+      onClick={() => {
+        const input = document.getElementById('manualAddress') as HTMLInputElement;
+        const addr = input?.value.trim();
+        if (addr && chain?.id) {
+          saveAddress(chain.id, addr);
+          alert(`✅ Address saved manually for ${getNetworkName(chain.id)}`);
+          input.value = '';
+        } else {
+          alert("Enter address and make sure you are on the correct network");
+        }
+      }}
+      className="bg-yellow-600 hover:bg-yellow-500 px-6 py-3 rounded-2xl font-semibold text-sm whitespace-nowrap"
+    >
+      Save Address
+    </button>
+  </div>
+  <p className="text-xs text-gray-500 mt-3">Работает для любого контракта, который вы развернули вручную</p>
+</div>
+            
 {/* 2. Mint Tokens */}
 <div>
   <h2 className="text-2xl font-semibold mb-4 text-white">2. Mint Tokens</h2>
