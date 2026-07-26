@@ -10,7 +10,7 @@ import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 
 // ARC Mainnet
 const arcMainnet = {
-  id: ARC_MAINNET_CHAIN_ID,
+  id: 5042,
   name: 'ARC Mainnet',
   nativeCurrency: { name: 'ARC', symbol: 'ARC', decimals: 18 },
   rpcUrls: { 
