@@ -738,7 +738,7 @@ const deploy = async (targetChainId: number) => {
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-5xl font-bold text-white">Galactic Bridge</h1>
-              <p className="text-gray-300 text-lg">LayerZero OFT v2 — Mainnets</p>
+              <p className="text-gray-300 text-lg">LayerZero OFT v2 — Mainnet Version</p>
             </div>
             <button onClick={resetAll} className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-2xl font-semibold">New Token</button>
           </div>
