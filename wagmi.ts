@@ -1,32 +1,35 @@
 // wagmi.ts
 import { http, createConfig } from 'wagmi';
 import { 
-  sepolia, 
-  baseSepolia, 
-  optimismSepolia, 
-  arbitrumSepolia   // ← Добавили Arbitrum Sepolia
+  mainnet, 
+  base, 
+  optimism, 
+  arbitrum 
 } from 'wagmi/chains';
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 
-// ARC Testnet (кастомная сеть)
-const arcTestnet = {
-  id: 5042002,
-  name: 'ARC Testnet',
-  nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
-  rpcUrls: { default: { http: ['https://arc-testnet.drpc.org'] } },
-  testnet: true,
+// ARC Mainnet
+const arcMainnet = {
+  id: ARC_MAINNET_CHAIN_ID,
+  name: 'ARC Mainnet',
+  nativeCurrency: { name: 'ARC', symbol: 'ARC', decimals: 18 },
+  rpcUrls: { 
+    default: { 
+      http: ['https://rpc-main-1.archiechain.io'] // или актуальный RPC
+    } 
+  },
 } as const;
 
 export const config = getDefaultConfig({
-  appName: 'Morgen OFT Creator',
+  appName: 'Galactic Bridge',
   projectId: '6cd43074381dca42cc0f029143e150c8',
-  chains: [sepolia, baseSepolia, optimismSepolia, arbitrumSepolia, arcTestnet],
+  chains: [mainnet, base, optimism, arbitrum, arcMainnet],
   transports: {
-    [sepolia.id]: http('https://ethereum-sepolia-rpc.publicnode.com'),
-    [baseSepolia.id]: http('https://sepolia.base.org'),
-    [optimismSepolia.id]: http('https://sepolia.optimism.io'),
-    [arbitrumSepolia.id]: http('https://sepolia-rollup.arbitrum.io/rpc'),  // официальный
-    [arcTestnet.id]: http('https://arc-testnet.drpc.org'),
+    [mainnet.id]: http('https://eth.llamarpc.com'),
+    [base.id]: http('https://mainnet.base.org'),
+    [optimism.id]: http('https://mainnet.optimism.io'),
+    [arbitrum.id]: http('https://arb1.arbitrum.io/rpc'),
+    [arcMainnet.id]: http('https://rpc-main-1.archiechain.io'), // обнови при необходимости
   },
   ssr: true,
 });
