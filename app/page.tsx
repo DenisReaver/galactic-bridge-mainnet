@@ -768,14 +768,33 @@ const deploy = async (targetChainId: number) => {
               </div>
             </div>
 
-            {/* Addresses */}
-            <div className="bg-white/5 border border-white/20 p-6 rounded-2xl space-y-2 text-sm">
-              <p><strong>Ethereum:</strong> <span className="text-emerald-400 break-all">{ethAddress || "—"}</span></p>
-              <p><strong>Base:</strong> <span className="text-emerald-400 break-all">{baseAddress || "—"}</span></p>
-              <p><strong>Optimism:</strong> <span className="text-emerald-400 break-all">{opAddress || "—"}</span></p>
-              <p><strong>Arbitrum:</strong> <span className="text-emerald-400 break-all">{arbAddress || "—"}</span></p>
-              <p><strong>ARC Mainnet:</strong> <span className="text-emerald-400 break-all">{arcAddress || "—"}</span></p>
-            </div>
+{/* Addresses */}
+<div className="bg-white/5 border border-white/20 p-6 rounded-2xl space-y-3 text-sm">
+  <div className="flex items-center gap-3">
+    <span className="font-semibold text-white w-28">Ethereum:</span>
+    <span className="font-mono text-emerald-400 break-all flex-1">{ethAddress || "—"}</span>
+  </div>
+  
+  <div className="flex items-center gap-3">
+    <span className="font-semibold text-white w-28">Base:</span>
+    <span className="font-mono text-emerald-400 break-all flex-1">{baseAddress || "—"}</span>
+  </div>
+  
+  <div className="flex items-center gap-3">
+    <span className="font-semibold text-white w-28">Optimism:</span>
+    <span className="font-mono text-emerald-400 break-all flex-1">{opAddress || "—"}</span>
+  </div>
+  
+  <div className="flex items-center gap-3">
+    <span className="font-semibold text-white w-28">Arbitrum:</span>
+    <span className="font-mono text-emerald-400 break-all flex-1">{arbAddress || "—"}</span>
+  </div>
+  
+  <div className="flex items-center gap-3">
+    <span className="font-semibold text-white w-28">ARC Mainnet:</span>
+    <span className="font-mono text-emerald-400 break-all flex-1">{arcAddress || "—"}</span>
+  </div>
+</div>
 
 {/* Manual Contract Address Input (для долгого подтверждения) */}
 <div className="bg-yellow-900/30 border border-yellow-500/40 p-6 rounded-2xl">
