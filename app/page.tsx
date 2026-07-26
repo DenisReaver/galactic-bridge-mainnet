@@ -492,7 +492,7 @@ export default function GalacticBridge() {
     window.location.reload();
   };
 
-// ==================== DEPLOY (улучшенная версия) ====================
+// ==================== IMPROVED DEPLOY ====================
 const deploy = async (targetChainId: number) => {
   if (!address) return alert("Connect your wallet");
   
@@ -502,6 +502,8 @@ const deploy = async (targetChainId: number) => {
     return;
   }
 
+  let txHash: string | null = null;
+
   try {
     const client = createWalletClient({
       chain: chain!,
@@ -509,31 +511,36 @@ const deploy = async (targetChainId: number) => {
       account: address,
     });
 
-    const hash = await client.deployContract({
+    txHash = await client.deployContract({
       abi: OFT_ABI,
       bytecode: MORGEN_BYTECODE as `0x${string}`,
       args: [name, symbol, LZ_ENDPOINT, address],
     });
 
-    alert(`Transaction sent!\nHash: ${hash}\n\nWaiting for confirmation... (can take 30-90 seconds with low gas)`);
+    alert(`✅ Transaction sent!\n\nHash: ${txHash}\n\nWaiting for confirmation...\n(Low gas = can take 30-120 seconds)`);
 
-    // Увеличенное ожидание + polling
-    const receipt = await publicClient!.waitForTransactionReceipt({ 
-      hash,
+    // Улучшенное ожидание
+    const receipt = await publicClient!.waitForTransactionReceipt({
+      hash: txHash as `0x${string}`,
       confirmations: 1,
-      timeout: 180_000,        // 3 минуты
-      pollingInterval: 5000    // проверять каждые 5 секунд
+      timeout: 240_000,     // 4 минуты
+      pollingInterval: 8000 // проверять каждые 8 секунд
     });
 
     if (receipt.contractAddress) {
       saveAddress(targetChainId, receipt.contractAddress);
-      alert(`✅ Successfully deployed on ${getNetworkName(targetChainId)}\nAddress: ${receipt.contractAddress}`);
+      alert(`🎉 DEPLOYED SUCCESSFULLY!\n\nNetwork: ${getNetworkName(targetChainId)}\nAddress: ${receipt.contractAddress}`);
     } else {
-      alert("Transaction confirmed, but contract address not found. Check Etherscan.");
+      alert("Transaction confirmed, but contract address not detected. Use manual check below.");
     }
   } catch (error: any) {
     console.error(error);
-    alert(`Error: ${error.message || "Transaction failed or took too long"}`);
+    
+    if (txHash) {
+      alert(`Transaction is still pending.\nHash: ${txHash}\n\nCheck on Etherscan and use manual address input if needed.`);
+    } else {
+      alert(`Error: ${error.message}`);
+    }
   }
 };
 
