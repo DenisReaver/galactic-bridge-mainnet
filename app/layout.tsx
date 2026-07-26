@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'powered By Galactic Bridge',
-  description: 'Create Omnichain tokens on the ARC Testnet, Base Sepolia, Sepolia, Optimism and ARbitrum',
+  description: 'Create Omnichain tokens on the ARC Mainnet, Base, Ethereum, Optimism and ARbitrum',
 };
 
 export default function RootLayout({
