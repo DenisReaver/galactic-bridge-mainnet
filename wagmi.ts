@@ -25,7 +25,7 @@ export const config = getDefaultConfig({
   projectId: '6cd43074381dca42cc0f029143e150c8',
   chains: [mainnet, base, optimism, arbitrum, arcMainnet],
   transports: {
-    [mainnet.id]: http('https://rpc.ankr.com/eth'),
+    [mainnet.id]: http('https://ethereum.publicnode.com'),
     [base.id]: http('https://mainnet.base.org'),
     [optimism.id]: http('https://mainnet.optimism.io'),
     [arbitrum.id]: http('https://arb1.arbitrum.io/rpc'),
