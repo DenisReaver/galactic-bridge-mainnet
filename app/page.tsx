@@ -492,37 +492,50 @@ export default function GalacticBridge() {
     window.location.reload();
   };
 
-  // ==================== DEPLOY ====================
-  const deploy = async (targetChainId: number) => {
-    if (!address) return alert("Connect your wallet");
-    if (chain?.id !== targetChainId) {
-      await switchChain({ chainId: targetChainId });
-      alert(`Switched to ${getNetworkName(targetChainId)}. Click Deploy again.`);
-      return;
+// ==================== DEPLOY (улучшенная версия) ====================
+const deploy = async (targetChainId: number) => {
+  if (!address) return alert("Connect your wallet");
+  
+  if (chain?.id !== targetChainId) {
+    await switchChain({ chainId: targetChainId });
+    alert(`Switched to ${getNetworkName(targetChainId)}. Click Deploy again.`);
+    return;
+  }
+
+  try {
+    const client = createWalletClient({
+      chain: chain!,
+      transport: custom(window.ethereum!),
+      account: address,
+    });
+
+    const hash = await client.deployContract({
+      abi: OFT_ABI,
+      bytecode: MORGEN_BYTECODE as `0x${string}`,
+      args: [name, symbol, LZ_ENDPOINT, address],
+    });
+
+    alert(`Transaction sent!\nHash: ${hash}\n\nWaiting for confirmation... (can take 30-90 seconds with low gas)`);
+
+    // Увеличенное ожидание + polling
+    const receipt = await publicClient!.waitForTransactionReceipt({ 
+      hash,
+      confirmations: 1,
+      timeout: 180_000,        // 3 минуты
+      pollingInterval: 5000    // проверять каждые 5 секунд
+    });
+
+    if (receipt.contractAddress) {
+      saveAddress(targetChainId, receipt.contractAddress);
+      alert(`✅ Successfully deployed on ${getNetworkName(targetChainId)}\nAddress: ${receipt.contractAddress}`);
+    } else {
+      alert("Transaction confirmed, but contract address not found. Check Etherscan.");
     }
-
-    try {
-      const client = createWalletClient({
-        chain: chain!,
-        transport: custom(window.ethereum!),
-        account: address,
-      });
-
-      const hash = await client.deployContract({
-        abi: OFT_ABI,
-        bytecode: MORGEN_BYTECODE as `0x${string}`,
-        args: [name, symbol, LZ_ENDPOINT, address],
-      });
-
-      const receipt = await publicClient!.waitForTransactionReceipt({ hash });
-      if (receipt.contractAddress) {
-        saveAddress(targetChainId, receipt.contractAddress);
-        alert(`✅ Deployed on ${getNetworkName(targetChainId)}`);
-      }
-    } catch (error: any) {
-      alert(`Deployment error: ${error.message}`);
-    }
-  };
+  } catch (error: any) {
+    console.error(error);
+    alert(`Error: ${error.message || "Transaction failed or took too long"}`);
+  }
+};
 
   // ==================== MINT ====================
   const mint = async (targetChainId: number) => {
