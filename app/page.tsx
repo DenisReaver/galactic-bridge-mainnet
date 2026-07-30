@@ -1057,6 +1057,33 @@ export default function GalacticBridge() {
               </div>
             </div>
 
+            {/* ==================== SOCIAL LINKS ==================== */}
+            <div className="pt-12 border-t border-white/10 mt-8 text-center">
+              <p className="text-gray-400 text-sm mb-6">Made with ❤️ by Denis Reaver</p>
+              
+              <div className="flex flex-col sm:flex-row gap-8 justify-center items-center text-lg">
+                <a 
+                  href="https://x.com/DenisArhipov6" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 text-pink-300 hover:text-pink-400 transition-colors"
+                >
+                  𝕏 Twitter / X
+                </a>
+                
+                <span className="text-white/30 text-2xl">•</span>
+                
+                <a 
+                  href="https://farcaster.xyz/tomasshelby.eth" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 text-pink-300 hover:text-pink-400 transition-colors"
+                >
+                  🟪 Farcaster
+                </a>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
