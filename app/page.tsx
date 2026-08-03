@@ -18,6 +18,8 @@ const OPTIMISM_EID = 30111;
 const ARBITRUM_EID = 30110;
 const ARC_MAINNET_EID = 30417;
 
+const CREATOR_ADDRESS = "0xD5635DaE1b8D3f4484eeE01225eD641f367cE40a" as const;
+
 const LZ_ENDPOINT = '0x1a44076050125825900e736c501f859c50fE728c' as const;
 
 // ==================== BYTE CODE ====================
