@@ -816,6 +816,9 @@ const deploy = async (targetChainId: number) => {
             {/* 1. Deploy */}
             <div>
               <h2 className="text-2xl font-semibold mb-4 text-white">1. Deploy Token</h2>
+              <p className="text-sm text-yellow-400 mb-4">
+  ⚠️ При деплое взимается комиссия: <strong>0.0001 ETH</strong> (Ethereum/Base/Optimism/Arbitrum) или <strong>0.2 USDC</strong> (ARC)
+</p>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 <button onClick={() => deploy(ETHEREUM_CHAIN_ID)} className="bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-semibold">Ethereum</button>
                 <button onClick={() => deploy(BASE_CHAIN_ID)} className="bg-rose-600 hover:bg-rose-700 py-4 rounded-2xl font-semibold">Base</button>
@@ -824,7 +827,7 @@ const deploy = async (targetChainId: number) => {
                 <button onClick={() => deploy(ARC_MAINNET_CHAIN_ID)} className="bg-purple-600 hover:bg-purple-700 py-4 rounded-2xl font-semibold">ARC Mainnet</button>
               </div>
             </div>
-
+            
             {/* Addresses */}
             <div className="bg-white/5 border border-white/20 p-6 rounded-2xl space-y-3 text-sm">
               <div className="flex items-center gap-3">
