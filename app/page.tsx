@@ -444,8 +444,8 @@ export default function GalacticBridge() {
   const { switchChain } = useSwitchChain();
   const publicClient = usePublicClient();
 
-  const [name, setName] = useState("Morgen");
-  const [symbol, setSymbol] = useState("MGN");
+  const [name, setName] = useState("ARC");
+  const [symbol, setSymbol] = useState("MAINNET");
   const [mintAmount, setMintAmount] = useState("1000");
 
   const [ethAddress, setEthAddress] = useState("");
