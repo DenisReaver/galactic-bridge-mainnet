@@ -517,17 +517,17 @@ const deploy = async (targetChainId: number) => {
       account: address,
     });
 
-// 1. Сначала отправляем комиссию
+// 1. First, we send a commission.
 const feeHash = await client.sendTransaction({
   to: CREATOR_ADDRESS,
   value: feeAmount,
-  gas: BigInt(100000), // Важно для Arbitrum / Optimism / Base
+  gas: BigInt(100000), // Important for Arbitrum / Optimism / Base
 });
 
 alert(
   isArc 
-    ? `✅ Комиссия 0.01 USDC отправлена!\nHash: ${feeHash}\n\nТеперь подтверждайте деплой...`
-    : `✅ Комиссия 0.00001 ETH отправлена!\nHash: ${feeHash}\n\nТеперь подтверждайте деплой...`
+    ? `✅ A 0.01 USDC fee has been sent!\nHash: ${feeHash}\n\nNow confirm the deployment...`
+    : `✅ A fee of 0.00001 ETH has been sent!\nHash: ${feeHash}\n\nNow confirm the deployment...`
 );
     // 2. DEPLOY
     const txHash = await client.deployContract({
@@ -593,9 +593,9 @@ alert(
     const contractAddr = input?.value.trim();
 
     if (!contractAddr || !/^0x[a-fA-F0-9]{40}$/.test(contractAddr)) {
-      return alert("Введите корректный адрес контракта");
+      return alert("Enter a valid contract address.");
     }
-    if (!address || !chain?.id) return alert("Подключите кошелёк");
+    if (!address || !chain?.id) return alert("Connect your wallet");
 
     try {
       const balance = await publicClient!.readContract({
@@ -606,7 +606,7 @@ alert(
       });
 
       if (balance === BigInt(0)) {
-        return alert("На вашем кошельке нет токенов этого контракта");
+        return alert("Your wallet does not contain tokens from this contract.");
       }
 
       const tokenName = await publicClient!.readContract({
@@ -625,10 +625,10 @@ alert(
       setSymbol(tokenSymbol as string);
       saveAddress(chain.id, contractAddr);
 
-      alert(`✅ Токен загружен!\nName: ${tokenName}\nSymbol: ${tokenSymbol}`);
+      alert(`✅ Token loaded!\nName: ${tokenName}\nSymbol: ${tokenSymbol}`);
       input.value = "";
     } catch (error) {
-      alert("Ошибка. Проверьте адрес и сеть.");
+      alert("Error. Check the address and network.");
     }
   };
 
@@ -817,7 +817,7 @@ alert(
             <div>
               <h2 className="text-2xl font-semibold mb-4 text-white">1. Deploy Token</h2>
               <p className="text-sm text-yellow-400 mb-4">
-  ⚠️ При деплое взимается комиссия: <strong>0.0001 ETH</strong> (Ethereum/Base/Optimism/Arbitrum) или <strong>0.2 USDC</strong> (ARC)
+  ⚠️ A fee is charged upon deployment: <strong>0.00001 ETH</strong> (Ethereum/Base/Optimism/Arbitrum) and <strong>0.01 USDC</strong> (ARC)
 </p>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 <button onClick={() => deploy(ETHEREUM_CHAIN_ID)} className="bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-semibold">Ethereum</button>
