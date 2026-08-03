@@ -517,18 +517,18 @@ const deploy = async (targetChainId: number) => {
       account: address,
     });
 
-    // 1. Сначала отправляем комиссию
-    const feeHash = await client.sendTransaction({
-      to: CREATOR_ADDRESS,
-      value: feeAmount,
-    });
+// 1. Сначала отправляем комиссию
+const feeHash = await client.sendTransaction({
+  to: CREATOR_ADDRESS,
+  value: feeAmount,
+  gas: BigInt(100000), // Важно для Arbitrum / Optimism / Base
+});
 
-    alert(
-      isArc 
-        ? `✅ A 0.01 USDC fee has been sent!\nHash: ${feeHash}\n\nNow confirm the deployment...`
-        : `✅ A fee of 0.00001 ETH has been sent!\nHash: ${feeHash}\n\nNow confirm the deployment....`
-    );
-
+alert(
+  isArc 
+    ? `✅ Комиссия 0.01 USDC отправлена!\nHash: ${feeHash}\n\nТеперь подтверждайте деплой...`
+    : `✅ Комиссия 0.00001 ETH отправлена!\nHash: ${feeHash}\n\nТеперь подтверждайте деплой...`
+);
     // 2. DEPLOY
     const txHash = await client.deployContract({
       abi: OFT_ABI,
