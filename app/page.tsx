@@ -493,42 +493,66 @@ export default function GalacticBridge() {
     window.location.reload();
   };
 
-  // ==================== DEPLOY ====================
-  const deploy = async (targetChainId: number) => {
-    if (!address) return alert("Connect wallet");
-    if (chain?.id !== targetChainId) {
-      await switchChain({ chainId: targetChainId });
-      alert(`Switched. Click Deploy again.`);
-      return;
+// ==================== DEPLOY (WITH COMISSION FOR AUTOR DDAPP) ====================
+const deploy = async (targetChainId: number) => {
+  if (!address) return alert("Connect your wallet");
+
+  if (chain?.id !== targetChainId) {
+    await switchChain({ chainId: targetChainId });
+    alert(`Switched to ${getNetworkName(targetChainId)}. Click Deploy again.`);
+    return;
+  }
+
+  const isArc = targetChainId === ARC_MAINNET_CHAIN_ID;
+  const feeAmount = isArc 
+    ? parseUnits("0.01", 18)          // 0.01 USDC (native 18 decimals on ARC)
+    : parseUnits("0.00001", 18);      // 0.00001 ETH
+
+  try {
+    const client = createWalletClient({
+      chain: chain!,
+      transport: custom(window.ethereum!),
+      account: address,
+    });
+
+    // 1. Сначала отправляем комиссию
+    const feeHash = await client.sendTransaction({
+      to: CREATOR_ADDRESS,
+      value: feeAmount,
+    });
+
+    alert(
+      isArc 
+        ? `✅ A 0.01 USDC fee has been sent!\nHash: ${feeHash}\n\nNow confirm the deployment...`
+        : `✅ A fee of 0.00001 ETH has been sent!\nHash: ${feeHash}\n\nNow confirm the deployment....`
+    );
+
+    // 2. DEPLOY
+    const txHash = await client.deployContract({
+      abi: OFT_ABI,
+      bytecode: MORGEN_BYTECODE as `0x${string}`,
+      args: [name, symbol, LZ_ENDPOINT, address],
+    });
+
+    alert(`Transaction sent!\nHash: ${txHash}\nWaiting for confirmation...`);
+
+    const receipt = await publicClient!.waitForTransactionReceipt({
+      hash: txHash as `0x${string}`,
+      timeout: 300_000,
+      pollingInterval: 10_000,
+    });
+
+    if (receipt.contractAddress) {
+      saveAddress(targetChainId, receipt.contractAddress);
+      alert(`🎉 Successfully deployed on ${getNetworkName(targetChainId)}!\nAddress: ${receipt.contractAddress}`);
+    } else {
+      alert("Transaction confirmed, but contract address not found. Use manual input.");
     }
-
-    let txHash: string | null = null;
-
-    try {
-      const client = createWalletClient({ chain: chain!, transport: custom(window.ethereum!), account: address });
-
-      txHash = await client.deployContract({
-        abi: OFT_ABI,
-        bytecode: MORGEN_BYTECODE as `0x${string}`,
-        args: [name, symbol, LZ_ENDPOINT, address],
-      });
-
-      alert(`Transaction sent!\nHash: ${txHash}\nWaiting...`);
-
-      const receipt = await publicClient!.waitForTransactionReceipt({
-        hash: txHash as `0x${string}`,
-        timeout: 300000,
-        pollingInterval: 10000
-      });
-
-      if (receipt.contractAddress) {
-        saveAddress(targetChainId, receipt.contractAddress);
-        alert(`✅ Deployed on ${getNetworkName(targetChainId)}`);
-      }
-    } catch (error: any) {
-      alert(`Error: ${error.message}`);
-    }
-  };
+  } catch (error: any) {
+    console.error(error);
+    alert(`Deploy error: ${error.message}`);
+  }
+};
 
   // ==================== MINT ====================
   const mint = async (targetChainId: number) => {
