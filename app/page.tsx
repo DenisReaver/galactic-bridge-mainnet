@@ -461,7 +461,7 @@ export default function GalacticBridge() {
 
   const [sendAmount, setSendAmount] = useState("100");
   const [fromNetwork, setFromNetwork] = useState<"eth" | "base" | "op" | "arb" | "arc">("eth");
-  const [toNetwork, setToNetwork] = useState<"eth" | "base" | "op" | "arb" | "arc">("base");
+  const [toNetwork, setToNetwork] = useState<"eth" | "base" | "op" | "arb" | "arc" | "tempo">("base");
   const [recipient, setRecipient] = useState("");
 
   const [lastTxHash, setLastTxHash] = useState("");
