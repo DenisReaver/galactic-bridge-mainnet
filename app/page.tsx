@@ -18,10 +18,6 @@ const OPTIMISM_EID = 30111;
 const ARBITRUM_EID = 30110;
 const ARC_MAINNET_EID = 30417;
 
-const TEMPO_CHAIN_ID = 4217;
-const TEMPO_EID = 30410;
-const LZ_ENDPOINT_TEMPO = '0x20Bb7C2E2f4e5ca2B4c57060d1aE2615245dCc9C' as const;
-
 const CREATOR_ADDRESS = "0xD5635DaE1b8D3f4484eeE01225eD641f367cE40a" as const;
 
 const LZ_ENDPOINT = '0x1a44076050125825900e736c501f859c50fE728c' as const;
@@ -453,7 +449,6 @@ export default function GalacticBridge() {
   const [mintAmount, setMintAmount] = useState("1000");
 
   const [ethAddress, setEthAddress] = useState("");
-  const [tempoAddress, setTempoAddress] = useState("");
   const [baseAddress, setBaseAddress] = useState("");
   const [opAddress, setOpAddress] = useState("");
   const [arbAddress, setArbAddress] = useState("");
@@ -461,7 +456,7 @@ export default function GalacticBridge() {
 
   const [sendAmount, setSendAmount] = useState("100");
   const [fromNetwork, setFromNetwork] = useState<"eth" | "base" | "op" | "arb" | "arc">("eth");
-  const [toNetwork, setToNetwork] = useState<"eth" | "base" | "op" | "arb" | "arc" | "tempo">("base");
+  const [toNetwork, setToNetwork] = useState<"eth" | "base" | "op" | "arb" | "arc">("base");
   const [recipient, setRecipient] = useState("");
 
   const [lastTxHash, setLastTxHash] = useState("");
@@ -471,7 +466,6 @@ export default function GalacticBridge() {
     setBaseAddress(localStorage.getItem("morgen_base") || "");
     setOpAddress(localStorage.getItem("morgen_optimism") || "");
     setArbAddress(localStorage.getItem("morgen_arbitrum") || "");
-    setTempoAddress(localStorage.getItem("morgen_tempo") || "");
     setArcAddress(localStorage.getItem("morgen_arc_mainnet") || "");
     if (address) setRecipient(address);
   }, [address]);
@@ -485,7 +479,6 @@ export default function GalacticBridge() {
     else if (chainId === OPTIMISM_CHAIN_ID) setOpAddress(contractAddress);
     else if (chainId === ARBITRUM_CHAIN_ID) setArbAddress(contractAddress);
     else if (chainId === ARC_MAINNET_CHAIN_ID) setArcAddress(contractAddress);
-    else if (chainId === TEMPO_CHAIN_ID) setTempoAddress(contractAddress);
   };
 
   const getNetworkName = (chainId: number) => {
@@ -493,7 +486,6 @@ export default function GalacticBridge() {
     if (chainId === ETHEREUM_CHAIN_ID) return "Ethereum";
     if (chainId === BASE_CHAIN_ID) return "Base";
     if (chainId === OPTIMISM_CHAIN_ID) return "Optimism";
-    if (chainId === TEMPO_CHAIN_ID) return "Tempo";
     return "Arbitrum";
   };
 
@@ -573,7 +565,6 @@ alert(
                        targetChainId === OPTIMISM_CHAIN_ID ? opAddress :
                        targetChainId === ARBITRUM_CHAIN_ID ? arbAddress : arcAddress;
 
-
     if (!targetAddr) return alert("Deploy first");
 
     if (chain?.id !== targetChainId) {
@@ -641,186 +632,154 @@ alert(
     }
   };
 
- // ==================== SET PEER ====================
-const setPeer = async (fromChainId: number, toEid: number, toAddress: string) => {
-  if (!address || !toAddress) return alert("Deploy both tokens first");
+  // ==================== SET PEER ====================
+  const setPeer = async (fromChainId: number, toEid: number, toAddress: string) => {
+    if (!address || !toAddress) return alert("Deploy both tokens first");
 
-  if (chain?.id !== fromChainId) {
-    await switchChain({ chainId: fromChainId });
-    alert("Switched. Click again.");
-    return;
-  }
+    if (chain?.id !== fromChainId) {
+      await switchChain({ chainId: fromChainId });
+      alert("Switched. Click again.");
+      return;
+    }
 
-  const srcAddress = fromChainId === ETHEREUM_CHAIN_ID ? ethAddress :
-                     fromChainId === BASE_CHAIN_ID ? baseAddress :
-                     fromChainId === OPTIMISM_CHAIN_ID ? opAddress :
-                     fromChainId === ARBITRUM_CHAIN_ID ? arbAddress :
-                     fromChainId === ARC_MAINNET_CHAIN_ID ? arcAddress :
-                     fromChainId === TEMPO_CHAIN_ID ? tempoAddress : "";
+    const srcAddress = fromChainId === ETHEREUM_CHAIN_ID ? ethAddress :
+                       fromChainId === BASE_CHAIN_ID ? baseAddress :
+                       fromChainId === OPTIMISM_CHAIN_ID ? opAddress :
+                       fromChainId === ARBITRUM_CHAIN_ID ? arbAddress : arcAddress;
 
-  if (!srcAddress) return alert("Source token not found");
+    if (!srcAddress) return alert("Source token not found");
 
-  try {
-    const client = createWalletClient({ chain: chain!, transport: custom(window.ethereum!), account: address });
-    const peer = `0x000000000000000000000000${toAddress.slice(2)}` as `0x${string}`;
+    try {
+      const client = createWalletClient({ chain: chain!, transport: custom(window.ethereum!), account: address });
+      const peer = `0x000000000000000000000000${toAddress.slice(2)}` as `0x${string}`;
 
-    await client.writeContract({
-      address: srcAddress as `0x${string}`,
-      abi: OFT_ABI,
-      functionName: "setPeer",
-      args: [toEid, peer],
-    });
+      await client.writeContract({
+        address: srcAddress as `0x${string}`,
+        abi: OFT_ABI,
+        functionName: "setPeer",
+        args: [toEid, peer],
+      });
 
-    alert(`✅ Set Peer completed`);
-  } catch (error: any) {
-    alert(`Set Peer error: ${error.message}`);
-  }
-};
+      alert(`✅ Set Peer completed`);
+    } catch (error: any) {
+      alert(`Set Peer error: ${error.message}`);
+    }
+  };
 
+  // ==================== SET ENFORCED OPTIONS ====================
+  const setEnforcedOptions = async (targetChainId: number) => {
+    if (!address) return alert("Connect wallet");
 
- // ==================== SET ENFORCED OPTIONS ====================
-const setEnforcedOptions = async (targetChainId: number) => {
-  if (!address) return alert("Connect wallet");
+    const targetAddr = targetChainId === ETHEREUM_CHAIN_ID ? ethAddress :
+                       targetChainId === BASE_CHAIN_ID ? baseAddress :
+                       targetChainId === OPTIMISM_CHAIN_ID ? opAddress :
+                       targetChainId === ARBITRUM_CHAIN_ID ? arbAddress : arcAddress;
 
-  const targetAddr = targetChainId === ETHEREUM_CHAIN_ID ? ethAddress :
-                     targetChainId === BASE_CHAIN_ID ? baseAddress :
-                     targetChainId === OPTIMISM_CHAIN_ID ? opAddress :
-                     targetChainId === ARBITRUM_CHAIN_ID ? arbAddress :
-                     targetChainId === ARC_MAINNET_CHAIN_ID ? arcAddress :
-                     targetChainId === TEMPO_CHAIN_ID ? tempoAddress : "";
+    if (!targetAddr) return alert("Deploy token first");
 
-  if (!targetAddr) return alert("Deploy token first");
+    if (chain?.id !== targetChainId) {
+      await switchChain({ chainId: targetChainId });
+      alert("Switched. Click again.");
+      return;
+    }
 
-  if (chain?.id !== targetChainId) {
-    await switchChain({ chainId: targetChainId });
-    alert("Switched. Click again.");
-    return;
-  }
+    const enforcedOptions = [
+      { eid: ETHEREUM_EID, msgType: 1, options: "0x000301001101000000000000000000000000000493e0" as `0x${string}` },
+      { eid: BASE_EID, msgType: 1, options: "0x000301001101000000000000000000000000000493e0" as `0x${string}` },
+      { eid: OPTIMISM_EID, msgType: 1, options: "0x000301001101000000000000000000000000000493e0" as `0x${string}` },
+      { eid: ARBITRUM_EID, msgType: 1, options: "0x000301001101000000000000000000000000000493e0" as `0x${string}` },
+      { eid: ARC_MAINNET_EID, msgType: 1, options: "0x000301001101000000000000000000000000000493e0" as `0x${string}` },
+    ];
 
-  const enforcedOptions = [
-    { eid: ETHEREUM_EID, msgType: 1, options: "0x000301001101000000000000000000000000000493e0" as `0x${string}` },
-    { eid: BASE_EID, msgType: 1, options: "0x000301001101000000000000000000000000000493e0" as `0x${string}` },
-    { eid: OPTIMISM_EID, msgType: 1, options: "0x000301001101000000000000000000000000000493e0" as `0x${string}` },
-    { eid: ARBITRUM_EID, msgType: 1, options: "0x000301001101000000000000000000000000000493e0" as `0x${string}` },
-    { eid: ARC_MAINNET_EID, msgType: 1, options: "0x000301001101000000000000000000000000000493e0" as `0x${string}` },
-    { eid: TEMPO_EID, msgType: 1, options: "0x000301001101000000000000000000000000000493e0" as `0x${string}` },
-  ];
+    try {
+      const client = createWalletClient({ chain: chain!, transport: custom(window.ethereum!), account: address });
 
-  try {
-    const client = createWalletClient({ chain: chain!, transport: custom(window.ethereum!), account: address });
+      await client.writeContract({
+        address: targetAddr as `0x${string}`,
+        abi: OFT_ABI,
+        functionName: "setEnforcedOptions",
+        args: [enforcedOptions],
+      });
 
-    await client.writeContract({
-      address: targetAddr as `0x${string}`,
-      abi: OFT_ABI,
-      functionName: "setEnforcedOptions",
-      args: [enforcedOptions],
-    });
+      alert(`✅ Enforced Options set on ${getNetworkName(targetChainId)}`);
+    } catch (error: any) {
+      alert(`Error: ${error.message}`);
+    }
+  };
 
-    alert(`✅ Enforced Options set on ${getNetworkName(targetChainId)}`);
-  } catch (error: any) {
-    alert(`Error: ${error.message}`);
-  }
-};
+  // ==================== SEND TOKEN ====================
+  const sendToken = async () => {
+    if (!address) return alert("Connect wallet");
+    if (!recipient) return alert("Enter recipient address");
 
- // ==================== SEND TOKEN ====================
-const sendToken = async () => {
-  if (!address) return alert("Connect wallet");
-  if (!recipient) return alert("Enter recipient address");
+    let srcAddress = "";
+    let dstEid = 0;
+    let targetChainId = 0;
 
-  let srcAddress = "";
-  let dstEid = 0;
-  let targetChainId = 0;
+    if (fromNetwork === "eth") {
+      srcAddress = ethAddress; dstEid = toNetwork === "base" ? BASE_EID : toNetwork === "op" ? OPTIMISM_EID : toNetwork === "arb" ? ARBITRUM_EID : ARC_MAINNET_EID;
+      targetChainId = ETHEREUM_CHAIN_ID;
+    } else if (fromNetwork === "base") {
+      srcAddress = baseAddress; dstEid = toNetwork === "eth" ? ETHEREUM_EID : toNetwork === "op" ? OPTIMISM_EID : toNetwork === "arb" ? ARBITRUM_EID : ARC_MAINNET_EID;
+      targetChainId = BASE_CHAIN_ID;
+    } else if (fromNetwork === "op") {
+      srcAddress = opAddress; dstEid = toNetwork === "eth" ? ETHEREUM_EID : toNetwork === "base" ? BASE_EID : toNetwork === "arb" ? ARBITRUM_EID : ARC_MAINNET_EID;
+      targetChainId = OPTIMISM_CHAIN_ID;
+    } else if (fromNetwork === "arb") {
+      srcAddress = arbAddress; dstEid = toNetwork === "eth" ? ETHEREUM_EID : toNetwork === "base" ? BASE_EID : toNetwork === "op" ? OPTIMISM_EID : ARC_MAINNET_EID;
+      targetChainId = ARBITRUM_CHAIN_ID;
+    } else if (fromNetwork === "arc") {
+      srcAddress = arcAddress; dstEid = toNetwork === "eth" ? ETHEREUM_EID : toNetwork === "base" ? BASE_EID : toNetwork === "op" ? OPTIMISM_EID : ARBITRUM_EID;
+      targetChainId = ARC_MAINNET_CHAIN_ID;
+    }
 
-  if (fromNetwork === "eth") {
-    srcAddress = ethAddress;
-    dstEid = toNetwork === "base" ? BASE_EID :
-             toNetwork === "op" ? OPTIMISM_EID :
-             toNetwork === "arb" ? ARBITRUM_EID :
-             toNetwork === "arc" ? ARC_MAINNET_EID :
-             toNetwork === "tempo" ? TEMPO_EID : 0;
-    targetChainId = ETHEREUM_CHAIN_ID;
-  } else if (fromNetwork === "base") {
-    srcAddress = baseAddress;
-    dstEid = toNetwork === "eth" ? ETHEREUM_EID :
-             toNetwork === "op" ? OPTIMISM_EID :
-             toNetwork === "arb" ? ARBITRUM_EID :
-             toNetwork === "arc" ? ARC_MAINNET_EID :
-             toNetwork === "tempo" ? TEMPO_EID : 0;
-    targetChainId = BASE_CHAIN_ID;
-  } else if (fromNetwork === "op") {
-    srcAddress = opAddress;
-    dstEid = toNetwork === "eth" ? ETHEREUM_EID :
-             toNetwork === "base" ? BASE_EID :
-             toNetwork === "arb" ? ARBITRUM_EID :
-             toNetwork === "arc" ? ARC_MAINNET_EID :
-             toNetwork === "tempo" ? TEMPO_EID : 0;
-    targetChainId = OPTIMISM_CHAIN_ID;
-  } else if (fromNetwork === "arb") {
-    srcAddress = arbAddress;
-    dstEid = toNetwork === "eth" ? ETHEREUM_EID :
-             toNetwork === "base" ? BASE_EID :
-             toNetwork === "op" ? OPTIMISM_EID :
-             toNetwork === "arc" ? ARC_MAINNET_EID :
-             toNetwork === "tempo" ? TEMPO_EID : 0;
-    targetChainId = ARBITRUM_CHAIN_ID;
-  } else if (fromNetwork === "arc") {
-    srcAddress = arcAddress;
-    dstEid = toNetwork === "eth" ? ETHEREUM_EID :
-             toNetwork === "base" ? BASE_EID :
-             toNetwork === "op" ? OPTIMISM_EID :
-             toNetwork === "arb" ? ARBITRUM_EID :
-             toNetwork === "tempo" ? TEMPO_EID : 0;
-    targetChainId = ARC_MAINNET_CHAIN_ID;
-  }
+    if (!srcAddress) return alert("Token not deployed on From network");
 
-  if (!srcAddress) return alert("Token not deployed on From network");
-  if (dstEid === 0) return alert("Invalid destination network");
+    if (chain?.id !== targetChainId) {
+      await switchChain({ chainId: targetChainId });
+      alert(`Switched to ${getNetworkName(targetChainId)}. Click Send again.`);
+      return;
+    }
 
-  if (chain?.id !== targetChainId) {
-    await switchChain({ chainId: targetChainId });
-    alert(`Switched to ${getNetworkName(targetChainId)}. Click Send again.`);
-    return;
-  }
+    try {
+      const client = createWalletClient({ chain: chain!, transport: custom(window.ethereum!), account: address });
+      const amountLD = parseUnits(sendAmount, 18);
 
-  try {
-    const client = createWalletClient({ chain: chain!, transport: custom(window.ethereum!), account: address });
-    const amountLD = parseUnits(sendAmount, 18);
+      const sendParam = {
+        dstEid,
+        to: `0x000000000000000000000000${recipient.slice(2)}` as `0x${string}`,
+        amountLD,
+        minAmountLD: (amountLD * BigInt(950)) / BigInt(1000),
+        extraOptions: "0x" as `0x${string}`,
+        composeMsg: "0x" as `0x${string}`,
+        oftCmd: "0x" as `0x${string}`,
+      };
 
-    const sendParam = {
-      dstEid,
-      to: `0x000000000000000000000000${recipient.slice(2)}` as `0x${string}`,
-      amountLD,
-      minAmountLD: (amountLD * BigInt(950)) / BigInt(1000),
-      extraOptions: "0x" as `0x${string}`,
-      composeMsg: "0x" as `0x${string}`,
-      oftCmd: "0x" as `0x${string}`,
-    };
+      const quote = await publicClient!.readContract({
+        address: srcAddress as `0x${string}`,
+        abi: OFT_ABI,
+        functionName: "quoteSend",
+        args: [sendParam, false],
+      });
 
-    const quote = await publicClient!.readContract({
-      address: srcAddress as `0x${string}`,
-      abi: OFT_ABI,
-      functionName: "quoteSend",
-      args: [sendParam, false],
-    });
+      const nativeFee = Array.isArray(quote) ? BigInt(quote[0]?.nativeFee || 0) : BigInt((quote as any)?.nativeFee || 0);
 
-    const nativeFee = Array.isArray(quote) ? BigInt(quote[0]?.nativeFee || 0) : BigInt((quote as any)?.nativeFee || 0);
+      if (nativeFee === BigInt(0)) throw new Error("nativeFee = 0. Check Set Peer & Enforced Options.");
 
-    if (nativeFee === BigInt(0)) throw new Error("nativeFee = 0. Check Set Peer & Enforced Options.");
+      const hash = await client.writeContract({
+        address: srcAddress as `0x${string}`,
+        abi: OFT_ABI,
+        functionName: "send",
+        args: [sendParam, { nativeFee, lzTokenFee: BigInt(0) }, address],
+        value: nativeFee,
+      });
 
-    const hash = await client.writeContract({
-      address: srcAddress as `0x${string}`,
-      abi: OFT_ABI,
-      functionName: "send",
-      args: [sendParam, { nativeFee, lzTokenFee: BigInt(0) }, address],
-      value: nativeFee,
-    });
-
-    setLastTxHash(hash);
-    alert(`✅ Transaction sent! Hash: ${hash}`);
-  } catch (error: any) {
-    alert(`Send failed: ${error.message}`);
-  }
-};
+      setLastTxHash(hash);
+      alert(`✅ Transaction sent! Hash: ${hash}`);
+    } catch (error: any) {
+      alert(`Send failed: ${error.message}`);
+    }
+  };
 
   const openLayerZeroScan = () => {
     if (!lastTxHash) return alert("No hash");
@@ -854,191 +813,277 @@ const sendToken = async () => {
               </div>
             </div>
 
-{/* 1. Deploy */}
-<div>
-  <h2 className="text-2xl font-semibold mb-4 text-white">1. Deploy Token</h2>
-  <p className="text-sm text-yellow-400 mb-4">
-    ⚠️ A fee is charged upon deployment: <strong>0.00001 ETH</strong> (Ethereum/Base/Optimism/Arbitrum) and <strong>0.01 USDC</strong> (ARC)
-  </p>
-  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-    <button onClick={() => deploy(ETHEREUM_CHAIN_ID)} className="bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-semibold">Ethereum</button>
-    <button onClick={() => deploy(BASE_CHAIN_ID)} className="bg-rose-600 hover:bg-rose-700 py-4 rounded-2xl font-semibold">Base</button>
-    <button onClick={() => deploy(OPTIMISM_CHAIN_ID)} className="bg-orange-600 hover:bg-orange-700 py-4 rounded-2xl font-semibold">Optimism</button>
-    <button onClick={() => deploy(ARBITRUM_CHAIN_ID)} className="bg-cyan-600 hover:bg-cyan-700 py-4 rounded-2xl font-semibold">Arbitrum</button>
-    <button onClick={() => deploy(ARC_MAINNET_CHAIN_ID)} className="bg-purple-600 hover:bg-purple-700 py-4 rounded-2xl font-semibold">ARC Mainnet</button>
-  </div>
-</div>
+            {/* 1. Deploy */}
+            <div>
+              <h2 className="text-2xl font-semibold mb-4 text-white">1. Deploy Token</h2>
+              <p className="text-sm text-yellow-400 mb-4">
+  ⚠️ A fee is charged upon deployment: <strong>0.00001 ETH</strong> (Ethereum/Base/Optimism/Arbitrum) and <strong>0.01 USDC</strong> (ARC)
+</p>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <button onClick={() => deploy(ETHEREUM_CHAIN_ID)} className="bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-semibold">Ethereum</button>
+                <button onClick={() => deploy(BASE_CHAIN_ID)} className="bg-rose-600 hover:bg-rose-700 py-4 rounded-2xl font-semibold">Base</button>
+                <button onClick={() => deploy(OPTIMISM_CHAIN_ID)} className="bg-orange-600 hover:bg-orange-700 py-4 rounded-2xl font-semibold">Optimism</button>
+                <button onClick={() => deploy(ARBITRUM_CHAIN_ID)} className="bg-cyan-600 hover:bg-cyan-700 py-4 rounded-2xl font-semibold">Arbitrum</button>
+                <button onClick={() => deploy(ARC_MAINNET_CHAIN_ID)} className="bg-purple-600 hover:bg-purple-700 py-4 rounded-2xl font-semibold">ARC Mainnet</button>
+              </div>
+            </div>
+            
+            {/* Addresses */}
+            <div className="bg-white/5 border border-white/20 p-6 rounded-2xl space-y-3 text-sm">
+              <div className="flex items-center gap-3">
+                <span className="font-semibold text-white w-28">Ethereum:</span>
+                <span className="font-mono text-emerald-400 break-all flex-1">{ethAddress || "—"}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="font-semibold text-white w-28">Base:</span>
+                <span className="font-mono text-emerald-400 break-all flex-1">{baseAddress || "—"}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="font-semibold text-white w-28">Optimism:</span>
+                <span className="font-mono text-emerald-400 break-all flex-1">{opAddress || "—"}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="font-semibold text-white w-28">Arbitrum:</span>
+                <span className="font-mono text-emerald-400 break-all flex-1">{arbAddress || "—"}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="font-semibold text-white w-28">ARC Mainnet:</span>
+                <span className="font-mono text-emerald-400 break-all flex-1">{arcAddress || "—"}</span>
+              </div>
+            </div>
 
-{/* Addresses */}
-<div className="bg-white/5 border border-white/20 p-6 rounded-2xl space-y-3 text-sm">
-  <div className="flex items-center gap-3">
-    <span className="font-semibold text-white w-28">Ethereum:</span>
-    <span className="font-mono text-emerald-400 break-all flex-1">{ethAddress || "—"}</span>
-  </div>
-  <div className="flex items-center gap-3">
-    <span className="font-semibold text-white w-28">Base:</span>
-    <span className="font-mono text-emerald-400 break-all flex-1">{baseAddress || "—"}</span>
-  </div>
-  <div className="flex items-center gap-3">
-    <span className="font-semibold text-white w-28">Optimism:</span>
-    <span className="font-mono text-emerald-400 break-all flex-1">{opAddress || "—"}</span>
-  </div>
-  <div className="flex items-center gap-3">
-    <span className="font-semibold text-white w-28">Arbitrum:</span>
-    <span className="font-mono text-emerald-400 break-all flex-1">{arbAddress || "—"}</span>
-  </div>
-  <div className="flex items-center gap-3">
-    <span className="font-semibold text-white w-28">ARC Mainnet:</span>
-    <span className="font-mono text-emerald-400 break-all flex-1">{arcAddress || "—"}</span>
-  </div>
-  <div className="flex items-center gap-3">
-    <span className="font-semibold text-white w-28">Tempo:</span>
-    <span className="font-mono text-emerald-400 break-all flex-1">{tempoAddress || "—"}</span>
-  </div>
-</div>
+            {/* 2. Mint */}
+            <div>
+              <h2 className="text-2xl font-semibold mb-4 text-white">2. Mint Tokens</h2>
+              <div className="flex flex-wrap items-end gap-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Amount</label>
+                  <input type="number" value={mintAmount} onChange={e => setMintAmount(e.target.value)} className="bg-white/10 border border-white/20 rounded-2xl px-5 py-3 w-48 text-white" placeholder="1000" />
+                </div>
+                <button onClick={() => mint(ETHEREUM_CHAIN_ID)} disabled={!ethAddress} className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Mint Ethereum</button>
+                <button onClick={() => mint(BASE_CHAIN_ID)} disabled={!baseAddress} className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Mint Base</button>
+                <button onClick={() => mint(OPTIMISM_CHAIN_ID)} disabled={!opAddress} className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Mint Optimism</button>
+                <button onClick={() => mint(ARBITRUM_CHAIN_ID)} disabled={!arbAddress} className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Mint Arbitrum</button>
+                <button onClick={() => mint(ARC_MAINNET_CHAIN_ID)} disabled={!arcAddress} className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Mint ARC</button>
+              </div>
+            </div>
 
-{/* 2. Mint */}
-<div>
-  <h2 className="text-2xl font-semibold mb-4 text-white">2. Mint Tokens</h2>
-  <div className="flex flex-wrap items-end gap-4">
-    <div>
-      <label className="block text-sm text-gray-400 mb-1">Amount</label>
-      <input type="number" value={mintAmount} onChange={e => setMintAmount(e.target.value)} className="bg-white/10 border border-white/20 rounded-2xl px-5 py-3 w-48 text-white" placeholder="1000" />
-    </div>
-    <button onClick={() => mint(ETHEREUM_CHAIN_ID)} disabled={!ethAddress} className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Mint Ethereum</button>
-    <button onClick={() => mint(BASE_CHAIN_ID)} disabled={!baseAddress} className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Mint Base</button>
-    <button onClick={() => mint(OPTIMISM_CHAIN_ID)} disabled={!opAddress} className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Mint Optimism</button>
-    <button onClick={() => mint(ARBITRUM_CHAIN_ID)} disabled={!arbAddress} className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Mint Arbitrum</button>
-    <button onClick={() => mint(ARC_MAINNET_CHAIN_ID)} disabled={!arcAddress} className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Mint ARC</button>
-  </div>
-</div>
+            {/* 3. Send via LayerZero */}
+            <div>
+              <h2 className="text-2xl font-semibold mb-4 text-white">3. Send via LayerZero</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">From</label>
+                  <select value={fromNetwork} onChange={e => setFromNetwork(e.target.value as any)} className="bg-zinc-900 border border-white/20 rounded-2xl px-5 py-3 w-full text-white">
+                    <option value="eth">Ethereum</option>
+                    <option value="base">Base</option>
+                    <option value="op">Optimism</option>
+                    <option value="arb">Arbitrum</option>
+                    <option value="arc">ARC Mainnet</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">To</label>
+                  <select value={toNetwork} onChange={e => setToNetwork(e.target.value as any)} className="bg-zinc-900 border border-white/20 rounded-2xl px-5 py-3 w-full text-white">
+                    <option value="eth">Ethereum</option>
+                    <option value="base">Base</option>
+                    <option value="op">Optimism</option>
+                    <option value="arb">Arbitrum</option>
+                    <option value="arc">ARC Mainnet</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Amount</label>
+                  <input type="number" value={sendAmount} onChange={e => setSendAmount(e.target.value)} className="bg-zinc-900 border border-white/20 rounded-2xl px-5 py-3 w-full text-white" placeholder="100" />
+                </div>
+              </div>
 
-{/* 3. Send via LayerZero */}
-<div>
-  <h2 className="text-2xl font-semibold mb-4 text-white">3. Send via LayerZero</h2>
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-    <div>
-      <label className="block text-sm text-gray-400 mb-1">From</label>
-      <select value={fromNetwork} onChange={e => setFromNetwork(e.target.value as any)} className="bg-zinc-900 border border-white/20 rounded-2xl px-5 py-3 w-full text-white">
-        <option value="eth">Ethereum</option>
-        <option value="base">Base</option>
-        <option value="op">Optimism</option>
-        <option value="arb">Arbitrum</option>
-        <option value="arc">ARC Mainnet</option>
-      </select>
-    </div>
-    <div>
-      <label className="block text-sm text-gray-400 mb-1">To</label>
-      <select value={toNetwork} onChange={e => setToNetwork(e.target.value as any)} className="bg-zinc-900 border border-white/20 rounded-2xl px-5 py-3 w-full text-white">
-        <option value="eth">Ethereum</option>
-        <option value="base">Base</option>
-        <option value="op">Optimism</option>
-        <option value="arb">Arbitrum</option>
-        <option value="arc">ARC Mainnet</option>
-        <option value="tempo">Tempo</option>
-      </select>
-    </div>
-    <div>
-      <label className="block text-sm text-gray-400 mb-1">Amount</label>
-      <input type="number" value={sendAmount} onChange={e => setSendAmount(e.target.value)} className="bg-zinc-900 border border-white/20 rounded-2xl px-5 py-3 w-full text-white" placeholder="100" />
-    </div>
-  </div>
+              <div className="mb-6">
+                <label className="block text-sm text-gray-400 mb-1">Recipient Address</label>
+                <input type="text" value={recipient} onChange={e => setRecipient(e.target.value)} placeholder="0x..." className="bg-zinc-900 border border-white/20 rounded-2xl px-5 py-3 w-full text-white font-mono" />
+              </div>
 
-  <div className="mb-6">
-    <label className="block text-sm text-gray-400 mb-1">Recipient Address</label>
-    <input type="text" value={recipient} onChange={e => setRecipient(e.target.value)} placeholder="0x..." className="bg-zinc-900 border border-white/20 rounded-2xl px-5 py-3 w-full text-white font-mono" />
-  </div>
+              <button onClick={sendToken} className="w-full bg-violet-600 hover:bg-violet-700 py-5 rounded-2xl text-lg font-semibold">Send via LayerZero</button>
 
-  <button onClick={sendToken} className="w-full bg-violet-600 hover:bg-violet-700 py-5 rounded-2xl text-lg font-semibold">
-    Send via LayerZero
-  </button>
+              {lastTxHash && (
+                <div className="mt-6 p-5 bg-green-900/30 border border-green-500/30 rounded-2xl">
+                  <p className="text-green-400 break-all text-sm mb-3">Tx Hash: {lastTxHash}</p>
+                  <button onClick={openLayerZeroScan} className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-xl font-medium">Open in LayerZero Scan →</button>
+                </div>
+              )}
+            </div>
 
-  {lastTxHash && (
-    <div className="mt-6 p-5 bg-green-900/30 border border-green-500/30 rounded-2xl">
-      <p className="text-green-400 break-all text-sm mb-3">Tx Hash: {lastTxHash}</p>
-      <button onClick={openLayerZeroScan} className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-xl font-medium">
-        Open in LayerZero Scan →
-      </button>
-    </div>
-  )}
-</div>
-
-{/* 4. SET PEER ALL CHAIN */}
+{/* 4. SET PEER ALL CHAIN*/}
 <div>
   <h2 className="text-2xl font-semibold mb-4 text-white">4. Set Peer (All Directions)</h2>
   <div className="grid grid-cols-2 gap-3 text-sm">
 
-    {/* ARC → others */}
-    <button onClick={() => setPeer(ARC_MAINNET_CHAIN_ID, ETHEREUM_EID, ethAddress)} disabled={!arcAddress || !ethAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">ARC → Ethereum</button>
-    <button onClick={() => setPeer(ARC_MAINNET_CHAIN_ID, BASE_EID, baseAddress)} disabled={!arcAddress || !baseAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">ARC → Base</button>
-    <button onClick={() => setPeer(ARC_MAINNET_CHAIN_ID, OPTIMISM_EID, opAddress)} disabled={!arcAddress || !opAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">ARC → Optimism</button>
-    <button onClick={() => setPeer(ARC_MAINNET_CHAIN_ID, ARBITRUM_EID, arbAddress)} disabled={!arcAddress || !arbAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">ARC → Arbitrum</button>
-    <button onClick={() => setPeer(ARC_MAINNET_CHAIN_ID, TEMPO_EID, tempoAddress)} disabled={!arcAddress || !tempoAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">ARC → Tempo</button>
+    {/* ARC Mainnet */}
+    <button 
+      onClick={() => setPeer(ARC_MAINNET_CHAIN_ID, ETHEREUM_EID, ethAddress)} 
+      disabled={!arcAddress || !ethAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      ARC → Ethereum
+    </button>
+    <button 
+      onClick={() => setPeer(ARC_MAINNET_CHAIN_ID, BASE_EID, baseAddress)} 
+      disabled={!arcAddress || !baseAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      ARC → Base
+    </button>
+    <button 
+      onClick={() => setPeer(ARC_MAINNET_CHAIN_ID, OPTIMISM_EID, opAddress)} 
+      disabled={!arcAddress || !opAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      ARC → Optimism
+    </button>
+    <button 
+      onClick={() => setPeer(ARC_MAINNET_CHAIN_ID, ARBITRUM_EID, arbAddress)} 
+      disabled={!arcAddress || !arbAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      ARC → Arbitrum
+    </button>
 
-    {/* Ethereum → others */}
-    <button onClick={() => setPeer(ETHEREUM_CHAIN_ID, ARC_MAINNET_EID, arcAddress)} disabled={!ethAddress || !arcAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Ethereum → ARC</button>
-    <button onClick={() => setPeer(ETHEREUM_CHAIN_ID, BASE_EID, baseAddress)} disabled={!ethAddress || !baseAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Ethereum → Base</button>
-    <button onClick={() => setPeer(ETHEREUM_CHAIN_ID, OPTIMISM_EID, opAddress)} disabled={!ethAddress || !opAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Ethereum → Optimism</button>
-    <button onClick={() => setPeer(ETHEREUM_CHAIN_ID, ARBITRUM_EID, arbAddress)} disabled={!ethAddress || !arbAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Ethereum → Arbitrum</button>
-    <button onClick={() => setPeer(ETHEREUM_CHAIN_ID, TEMPO_EID, tempoAddress)} disabled={!ethAddress || !tempoAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Ethereum → Tempo</button>
+    {/* Ethereum */}
+    <button 
+      onClick={() => setPeer(ETHEREUM_CHAIN_ID, ARC_MAINNET_EID, arcAddress)} 
+      disabled={!ethAddress || !arcAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Ethereum → ARC
+    </button>
+    <button 
+      onClick={() => setPeer(ETHEREUM_CHAIN_ID, BASE_EID, baseAddress)} 
+      disabled={!ethAddress || !baseAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Ethereum → Base
+    </button>
+    <button 
+      onClick={() => setPeer(ETHEREUM_CHAIN_ID, OPTIMISM_EID, opAddress)} 
+      disabled={!ethAddress || !opAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Ethereum → Optimism
+    </button>
+    <button 
+      onClick={() => setPeer(ETHEREUM_CHAIN_ID, ARBITRUM_EID, arbAddress)} 
+      disabled={!ethAddress || !arbAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Ethereum → Arbitrum
+    </button>
 
-    {/* Base → others */}
-    <button onClick={() => setPeer(BASE_CHAIN_ID, ARC_MAINNET_EID, arcAddress)} disabled={!baseAddress || !arcAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Base → ARC</button>
-    <button onClick={() => setPeer(BASE_CHAIN_ID, ETHEREUM_EID, ethAddress)} disabled={!baseAddress || !ethAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Base → Ethereum</button>
-    <button onClick={() => setPeer(BASE_CHAIN_ID, OPTIMISM_EID, opAddress)} disabled={!baseAddress || !opAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Base → Optimism</button>
-    <button onClick={() => setPeer(BASE_CHAIN_ID, ARBITRUM_EID, arbAddress)} disabled={!baseAddress || !arbAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Base → Arbitrum</button>
-    <button onClick={() => setPeer(BASE_CHAIN_ID, TEMPO_EID, tempoAddress)} disabled={!baseAddress || !tempoAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Base → Tempo</button>
+    {/* Base */}
+    <button 
+      onClick={() => setPeer(BASE_CHAIN_ID, ARC_MAINNET_EID, arcAddress)} 
+      disabled={!baseAddress || !arcAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Base → ARC
+    </button>
+    <button 
+      onClick={() => setPeer(BASE_CHAIN_ID, ETHEREUM_EID, ethAddress)} 
+      disabled={!baseAddress || !ethAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Base → Ethereum
+    </button>
+    <button 
+      onClick={() => setPeer(BASE_CHAIN_ID, OPTIMISM_EID, opAddress)} 
+      disabled={!baseAddress || !opAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Base → Optimism
+    </button>
+    <button 
+      onClick={() => setPeer(BASE_CHAIN_ID, ARBITRUM_EID, arbAddress)} 
+      disabled={!baseAddress || !arbAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Base → Arbitrum
+    </button>
 
-    {/* Optimism → others */}
-    <button onClick={() => setPeer(OPTIMISM_CHAIN_ID, ARC_MAINNET_EID, arcAddress)} disabled={!opAddress || !arcAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Optimism → ARC</button>
-    <button onClick={() => setPeer(OPTIMISM_CHAIN_ID, ETHEREUM_EID, ethAddress)} disabled={!opAddress || !ethAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Optimism → Ethereum</button>
-    <button onClick={() => setPeer(OPTIMISM_CHAIN_ID, BASE_EID, baseAddress)} disabled={!opAddress || !baseAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Optimism → Base</button>
-    <button onClick={() => setPeer(OPTIMISM_CHAIN_ID, ARBITRUM_EID, arbAddress)} disabled={!opAddress || !arbAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Optimism → Arbitrum</button>
-    <button onClick={() => setPeer(OPTIMISM_CHAIN_ID, TEMPO_EID, tempoAddress)} disabled={!opAddress || !tempoAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Optimism → Tempo</button>
+    {/* Optimism */}
+    <button 
+      onClick={() => setPeer(OPTIMISM_CHAIN_ID, ARC_MAINNET_EID, arcAddress)} 
+      disabled={!opAddress || !arcAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Optimism → ARC
+    </button>
+    <button 
+      onClick={() => setPeer(OPTIMISM_CHAIN_ID, ETHEREUM_EID, ethAddress)} 
+      disabled={!opAddress || !ethAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Optimism → Ethereum
+    </button>
+    <button 
+      onClick={() => setPeer(OPTIMISM_CHAIN_ID, BASE_EID, baseAddress)} 
+      disabled={!opAddress || !baseAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Optimism → Base
+    </button>
+    <button 
+      onClick={() => setPeer(OPTIMISM_CHAIN_ID, ARBITRUM_EID, arbAddress)} 
+      disabled={!opAddress || !arbAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Optimism → Arbitrum
+    </button>
 
-    {/* Arbitrum → others */}
-    <button onClick={() => setPeer(ARBITRUM_CHAIN_ID, ARC_MAINNET_EID, arcAddress)} disabled={!arbAddress || !arcAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Arbitrum → ARC</button>
-    <button onClick={() => setPeer(ARBITRUM_CHAIN_ID, ETHEREUM_EID, ethAddress)} disabled={!arbAddress || !ethAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Arbitrum → Ethereum</button>
-    <button onClick={() => setPeer(ARBITRUM_CHAIN_ID, BASE_EID, baseAddress)} disabled={!arbAddress || !baseAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Arbitrum → Base</button>
-    <button onClick={() => setPeer(ARBITRUM_CHAIN_ID, OPTIMISM_EID, opAddress)} disabled={!arbAddress || !opAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Arbitrum → Optimism</button>
-    <button onClick={() => setPeer(ARBITRUM_CHAIN_ID, TEMPO_EID, tempoAddress)} disabled={!arbAddress || !tempoAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Arbitrum → Tempo</button>
+    {/* Arbitrum */}
+    <button 
+      onClick={() => setPeer(ARBITRUM_CHAIN_ID, ARC_MAINNET_EID, arcAddress)} 
+      disabled={!arbAddress || !arcAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Arbitrum → ARC
+    </button>
+    <button 
+      onClick={() => setPeer(ARBITRUM_CHAIN_ID, ETHEREUM_EID, ethAddress)} 
+      disabled={!arbAddress || !ethAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Arbitrum → Ethereum
+    </button>
+    <button 
+      onClick={() => setPeer(ARBITRUM_CHAIN_ID, BASE_EID, baseAddress)} 
+      disabled={!arbAddress || !baseAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Arbitrum → Base
+    </button>
+    <button 
+      onClick={() => setPeer(ARBITRUM_CHAIN_ID, OPTIMISM_EID, opAddress)} 
+      disabled={!arbAddress || !opAddress} 
+      className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">
+      Arbitrum → Optimism
+    </button>
 
   </div>
 </div>
 
-{/* 5. Enforced Options */}
-<div>
-  <h2 className="text-2xl font-semibold mb-4 text-white">5. Enforced Options</h2>
-  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-    <button onClick={() => setEnforcedOptions(ETHEREUM_CHAIN_ID)} disabled={!ethAddress} className="bg-amber-600 hover:bg-amber-700 py-4 rounded-2xl">Ethereum</button>
-    <button onClick={() => setEnforcedOptions(BASE_CHAIN_ID)} disabled={!baseAddress} className="bg-amber-600 hover:bg-amber-700 py-4 rounded-2xl">Base</button>
-    <button onClick={() => setEnforcedOptions(OPTIMISM_CHAIN_ID)} disabled={!opAddress} className="bg-amber-600 hover:bg-amber-700 py-4 rounded-2xl">Optimism</button>
-    <button onClick={() => setEnforcedOptions(ARBITRUM_CHAIN_ID)} disabled={!arbAddress} className="bg-amber-600 hover:bg-amber-700 py-4 rounded-2xl">Arbitrum</button>
-    <button onClick={() => setEnforcedOptions(ARC_MAINNET_CHAIN_ID)} disabled={!arcAddress} className="bg-amber-600 hover:bg-amber-700 py-4 rounded-2xl">ARC Mainnet</button>
-  </div>
-</div>
+            {/* 5. Enforced Options */}
+            <div>
+              <h2 className="text-2xl font-semibold mb-4 text-white">5. Enforced Options</h2>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <button onClick={() => setEnforcedOptions(ETHEREUM_CHAIN_ID)} disabled={!ethAddress} className="bg-amber-600 hover:bg-amber-700 py-4 rounded-2xl">Ethereum</button>
+                <button onClick={() => setEnforcedOptions(BASE_CHAIN_ID)} disabled={!baseAddress} className="bg-amber-600 hover:bg-amber-700 py-4 rounded-2xl">Base</button>
+                <button onClick={() => setEnforcedOptions(OPTIMISM_CHAIN_ID)} disabled={!opAddress} className="bg-amber-600 hover:bg-amber-700 py-4 rounded-2xl">Optimism</button>
+                <button onClick={() => setEnforcedOptions(ARBITRUM_CHAIN_ID)} disabled={!arbAddress} className="bg-amber-600 hover:bg-amber-700 py-4 rounded-2xl">Arbitrum</button>
+                <button onClick={() => setEnforcedOptions(ARC_MAINNET_CHAIN_ID)} disabled={!arcAddress} className="bg-amber-600 hover:bg-amber-700 py-4 rounded-2xl">ARC Mainnet</button>
+              </div>
+            </div>
 
-{/* Панель загрузки старого токена */}
-<div className="mt-16 pt-10 border-t border-white/10">
-  <h2 className="text-2xl font-semibold mb-6 text-white">Load a previously created token</h2>
-  <div className="bg-zinc-900/70 border border-white/20 p-6 rounded-3xl">
-    <p className="text-gray-400 mb-4">Enter the token contract address for the current network.</p>
-    <div className="flex gap-3">
-      <input 
-        type="text" 
-        id="oldContractInput"
-        placeholder="0x..." 
-        className="flex-1 bg-black border border-white/30 rounded-2xl px-5 py-3.5 font-mono text-sm focus:border-violet-500 outline-none"
-      />
-      <button 
-        onClick={loadOldToken}
-        className="bg-violet-600 hover:bg-violet-700 px-8 py-3.5 rounded-2xl font-semibold"
-      >
-        Download
-      </button>
-    </div>
-  </div>
-</div>
+            {/* Панель загрузки старого токена */}
+            <div className="mt-16 pt-10 border-t border-white/10">
+              <h2 className="text-2xl font-semibold mb-6 text-white">Load a previously created token</h2>
+              <div className="bg-zinc-900/70 border border-white/20 p-6 rounded-3xl">
+                <p className="text-gray-400 mb-4">Enter the token contract address for the current network.</p>
+                <div className="flex gap-3">
+                  <input 
+                    type="text" 
+                    id="oldContractInput"
+                    placeholder="0x..." 
+                    className="flex-1 bg-black border border-white/30 rounded-2xl px-5 py-3.5 font-mono text-sm focus:border-violet-500 outline-none"
+                  />
+                  <button 
+                    onClick={loadOldToken}
+                    className="bg-violet-600 hover:bg-violet-700 px-8 py-3.5 rounded-2xl font-semibold"
+                  >
+                    Download
+                  </button>
+                </div>
+              </div>
+            </div>
 
             {/* ==================== SOCIAL LINKS ==================== */}
             <div className="pt-12 border-t border-white/10 mt-8 text-center">
