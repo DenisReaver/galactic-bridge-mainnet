@@ -72,7 +72,7 @@ const LZ_PROTOCOL: Record<number, {
     sendUln302: '0xB5320B0B3a13cC860893E2Bd79FCd7e13484Dda2',
     receiveUln302: '0xc70AB6f32772f59fBfc23889Caf4Ba3376C84bAf',
     executor: '0x2CCA08ae69E0C44b18a57Ab2A87644234dAebaE4',
-    dvn: '0x9e059a54699a285714207b43b055483e78faac25', // LayerZero Labs on Base
+    dvn: '0x6498b0632f3834D7647367334838111c8C889703', // LayerZero Labs on Base
   },
   // Tempo
   [TEMPO_CHAIN_ID]: {
