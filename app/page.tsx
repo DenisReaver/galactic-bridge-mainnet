@@ -1412,5 +1412,6 @@ const sendToken = async () => {
         </div>
       </div>
     </div>
+      </div>
   );
 }
