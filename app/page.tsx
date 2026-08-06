@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAccount, useSwitchChain, usePublicClient } from 'wagmi';
 import { createWalletClient, custom, parseUnits } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { encodeAbiParameters, parseAbiParameters } from 'viem';
 
 // ==================== MAINNET CONSTANTS ====================
 const ETHEREUM_CHAIN_ID = 1;
@@ -25,6 +26,110 @@ const LZ_ENDPOINT = '0x1a44076050125825900e736c501f859c50fE728c' as const;
 //BLOCK TEMPO BEGIN
 const TEMPO_CHAIN_ID = 4217;
 const TEMPO_EID = 30410;
+
+const LZ_PROTOCOL: Record<number, {
+  endpoint: `0x${string}`;
+  sendUln302: `0x${string}`;
+  receiveUln302: `0x${string}`;
+  executor: `0x${string}`;
+  dvn: `0x${string}`; // LayerZero Labs DVN
+}> = {
+  // Ethereum
+  [ETHEREUM_CHAIN_ID]: {
+    endpoint: '0x1a44076050125825900e736c501f859c50fE728c',
+    sendUln302: '0xbB2Ea70C9E858123480642Cf96acbcCE1372dCe1',
+    receiveUln302: '0xc02Ab410f0734EFa3F14628780e6e695156024C2',
+    executor: '0x173272739Bd7Aa6e4e214714048a9fE699453059',
+    dvn: '0x589dECb3dCF50Da63e9587D47Da3a9CE2723Ad33', // проверь на docs
+  },
+  //ARC
+      [ARC_MAINNET_CHAIN_ID]: {
+    endpoint: '0x6F475642a6e85809B1c36Fa62763669b1b48DD5B',
+    sendUln302: '0xC39161c743D0307EB9BCc9FEF03eeb9Dc4802de7',
+    receiveUln302: '0xe1844c5D63a9543023008D332Bd3d2e6f1FE1043',
+    executor: '0x4208D6E27538189bB48E603D6123A94b8Abe0A0b',
+    dvn: '0x6788f52439ACA6BFF597d3eeC2DC9a44B8FEE842', // LayerZero Labs on DVN
+  },
+  //optimism
+    [OPTIMISM_CHAIN_ID]: {
+    endpoint: '0x1a44076050125825900e736c501f859c50fE728c',
+    sendUln302: '0x1322871e4ab09Bc7f5717189434f97bBD9546e95',
+    receiveUln302: '0x3c4962Ff6258dcfCafD23a814237B7d6Eb712063',
+    executor: '0x2D2ea0697bdbede3F01553D2Ae4B8d0c486B666e',
+    dvn: '0xEbc3065003e67CaaC747836dA272d9E5271A37e1', // LayerZero Labs on DVN
+  },
+  //arbitrum
+    [ARBITRUM_CHAIN_ID]: {
+    endpoint: '0x1a44076050125825900e736c501f859c50fE728c',
+    sendUln302: '0x975bcD720be66659e3EB3C0e4F1866a3020E493A',
+    receiveUln302: '0x7B9E184e07a6EE1aC23eAe0fe8D6Be2f663f05e6',
+    executor: '0x31CAe3B7fB82d847621859fb1585353c5720660D',
+    dvn: '0x758C419533ad64Ce9D3413BC8d3A97B026098EC1', // LayerZero Labs on Base
+  },
+  // Base
+  [BASE_CHAIN_ID]: {
+    endpoint: '0x1a44076050125825900e736c501f859c50fE728c',
+    sendUln302: '0xB5320B0B3a13cC860893E2Bd79FCd7e13484Dda2',
+    receiveUln302: '0xc70AB6f32772f59fBfc23889Caf4Ba3376C84bAf',
+    executor: '0x2CCA08ae69E0C44b18a57Ab2A87644234dAebaE4',
+    dvn: '0x9e059a54699a285714207b43b055483e78faac25', // LayerZero Labs on Base
+  },
+  // Tempo
+  [TEMPO_CHAIN_ID]: {
+    endpoint: '0x20Bb7C2E2f4e5ca2B4c57060d1aE2615245dCc9C',
+    sendUln302: '0x572863d9247E52026E0892d9Cd2E519B41EdB73C', // ← ЗАПОЛНИ из docs Tempo
+    receiveUln302: '0x0B6F08C2D39421Acb49c99abCe82050e356171e5',
+    executor: '0xf851abCa1d0fD1Df8eAba6de466a102996b7d7B2',
+    dvn: '0x3436d350103a9dfA252a04f102f9f10f58Ff450C',
+  },
+};
+
+
+const ENDPOINT_ABI = [
+  {
+    name: 'setSendLibrary',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'oapp', type: 'address' },
+      { name: 'eid', type: 'uint32' },
+      { name: 'lib', type: 'address' },
+    ],
+    outputs: [],
+  },
+  {
+    name: 'setReceiveLibrary',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'oapp', type: 'address' },
+      { name: 'eid', type: 'uint32' },
+      { name: 'lib', type: 'address' },
+      { name: 'gracePeriod', type: 'uint256' },
+    ],
+    outputs: [],
+  },
+  {
+    name: 'setConfig',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'oapp', type: 'address' },
+      { name: 'lib', type: 'address' },
+      {
+        name: 'params',
+        type: 'tuple[]',
+        components: [
+          { name: 'eid', type: 'uint32' },
+          { name: 'configType', type: 'uint32' },
+          { name: 'config', type: 'bytes' },
+        ],
+      },
+    ],
+    outputs: [],
+  },
+] as const;
+
 
 const LZ_ENDPOINT_TEMPO = '0x20Bb7C2E2f4e5ca2B4c57060d1aE2615245dCc9C' as const;
 const LZD_ADDRESS = '0x0cEb237E109eE22374a567c6b09F373C73FA4cBb' as const;
@@ -512,6 +617,109 @@ export default function GalacticBridge() {
     window.location.reload();
   };
 
+const CONFIG_TYPE_EXECUTOR = 1;
+const CONFIG_TYPE_ULN = 2;
+
+const configurePathway = async (
+  localChainId: number,
+  remoteEid: number,
+  oappAddress: string
+) => {
+  if (!address) return alert('Connect wallet');
+  if (!oappAddress) return alert('OApp address missing');
+
+  const proto = LZ_PROTOCOL[localChainId];
+  if (!proto) return alert('Protocol addresses not set for this chain');
+  if (proto.sendUln302 === '0x0000000000000000000000000000000000000000') {
+    return alert('Fill Tempo SendUln302 / ReceiveUln302 / Executor / DVN in LZ_PROTOCOL');
+  }
+
+  if (chain?.id !== localChainId) {
+    await switchChain({ chainId: localChainId });
+    alert(`Switched to ${getNetworkName(localChainId)}. Click again.`);
+    return;
+  }
+
+  try {
+    const client = createWalletClient({
+      chain: chain!,
+      transport: custom(window.ethereum!),
+      account: address,
+    });
+
+    // 1) Libraries
+    await client.writeContract({
+      address: proto.endpoint,
+      abi: ENDPOINT_ABI,
+      functionName: 'setSendLibrary',
+      args: [oappAddress as `0x${string}`, remoteEid, proto.sendUln302],
+    });
+
+    await client.writeContract({
+      address: proto.endpoint,
+      abi: ENDPOINT_ABI,
+      functionName: 'setReceiveLibrary',
+      args: [oappAddress as `0x${string}`, remoteEid, proto.receiveUln302, BigInt(0)],
+    });
+
+    // 2) Encode ULN (DVN) config
+    // struct: (uint64 confirmations, uint8 requiredDVNCount, uint8 optionalDVNCount, uint8 optionalDVNThreshold, address[] requiredDVNs, address[] optionalDVNs)
+    const ulnConfig = encodeAbiParameters(
+      parseAbiParameters('uint64, uint8, uint8, uint8, address[], address[]'),
+      [
+        BigInt(5),          // confirmations
+        1,                  // requiredDVNCount
+        0,                  // optionalDVNCount
+        0,                  // optionalDVNThreshold
+        [proto.dvn],        // requiredDVNs (sorted)
+        [],                 // optionalDVNs
+      ]
+    );
+
+    // 3) Encode Executor config
+    // struct: (uint32 maxMessageSize, address executor)
+    const executorConfig = encodeAbiParameters(
+      parseAbiParameters('uint32, address'),
+      [10000, proto.executor]
+    );
+
+    // 4) Send-side config (Executor + ULN) на SendUln302
+    await client.writeContract({
+      address: proto.endpoint,
+      abi: ENDPOINT_ABI,
+      functionName: 'setConfig',
+      args: [
+        oappAddress as `0x${string}`,
+        proto.sendUln302,
+        [
+          { eid: remoteEid, configType: CONFIG_TYPE_EXECUTOR, config: executorConfig },
+          { eid: remoteEid, configType: CONFIG_TYPE_ULN, config: ulnConfig },
+        ],
+      ],
+    });
+
+    // 5) Receive-side ULN на ReceiveUln302
+    await client.writeContract({
+      address: proto.endpoint,
+      abi: ENDPOINT_ABI,
+      functionName: 'setConfig',
+      args: [
+        oappAddress as `0x${string}`,
+        proto.receiveUln302,
+        [
+          { eid: remoteEid, configType: CONFIG_TYPE_ULN, config: ulnConfig },
+        ],
+      ],
+    });
+
+    alert(`✅ DVN/Executor configured on ${getNetworkName(localChainId)} → EID ${remoteEid}`);
+  } catch (error: any) {
+    console.error(error);
+    alert(`Config error: ${error?.shortMessage || error?.message || error}`);
+  }
+};
+
+  
 // ==================== DEPLOY ====================
 const deploy = async (targetChainId: number) => {
   if (!address) return alert("Connect your wallet");
@@ -1146,6 +1354,32 @@ const sendToken = async () => {
     </div>
   </div>
 </div>
+
+{/* 6. Configure DVN / Executor */}
+<div>
+  <h2 className="text-2xl font-semibold mb-4 text-white">6. Configure DVN / Executor</h2>
+  <p className="text-sm text-yellow-400 mb-4">
+    Нужно на обеих сторонах пути. Без этого quoteSend падает с ошибкой DVNs/Executor.
+  </p>
+  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+    <button
+      onClick={() => configurePathway(BASE_CHAIN_ID, TEMPO_EID, baseAddress)}
+      disabled={!baseAddress}
+      className="bg-pink-600 hover:bg-pink-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold"
+    >
+      Base → Tempo
+    </button>
+    <button
+      onClick={() => configurePathway(TEMPO_CHAIN_ID, BASE_EID, tempoAddress)}
+      disabled={!tempoAddress}
+      className="bg-pink-600 hover:bg-pink-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold"
+    >
+      Tempo → Base
+    </button>
+    {/* добавь другие пары по тому же шаблону */}
+  </div>
+</div>
+            
 
             {/* ==================== SOCIAL LINKS ==================== */}
             <div className="pt-12 border-t border-white/10 mt-8 text-center">
