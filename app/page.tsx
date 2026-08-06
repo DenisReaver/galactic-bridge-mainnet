@@ -625,13 +625,19 @@ const configurePathway = async (
   remoteEid: number,
   oappAddress: string
 ) => {
-  if (!address) return alert('Connect wallet');
-  if (!oappAddress) return alert('OApp address missing');
+  if (!address) return alert("Connect wallet");
+  if (!oappAddress) return alert("OApp address missing");
 
   const proto = LZ_PROTOCOL[localChainId];
-  if (!proto) return alert('Protocol addresses not set for this chain');
-  if (proto.sendUln302 === '0x0000000000000000000000000000000000000000') {
-    return alert('Fill Tempo SendUln302 / ReceiveUln302 / Executor / DVN in LZ_PROTOCOL');
+  if (!proto) return alert("Protocol addresses not set for this chain");
+
+  if (
+    !proto.sendUln302 ||
+    proto.sendUln302 === "0x0000000000000000000000000000000000000000" ||
+    !proto.dvn ||
+    proto.dvn === "0x0000000000000000000000000000000000000000"
+  ) {
+    return alert("Заполни реальные адреса SendUln302 / ReceiveUln302 / Executor / DVN для этой сети");
   }
 
   if (chain?.id !== localChainId) {
@@ -647,49 +653,61 @@ const configurePathway = async (
       account: address,
     });
 
-    // 1) Libraries
-    await client.writeContract({
+    const oapp = oappAddress as `0x${string}`;
+
+    // ---- helpers ----
+    const sendAndWait = async (label: string, req: any) => {
+      alert(`${label}\nConfirm in MetaMask...`);
+      const hash = await client.writeContract(req);
+      await publicClient!.waitForTransactionReceipt({
+        hash,
+        timeout: 300_000,
+        pollingInterval: 5_000,
+      });
+      return hash;
+    };
+
+    // 1) Send library
+    await sendAndWait("1/4 setSendLibrary", {
       address: proto.endpoint,
       abi: ENDPOINT_ABI,
-      functionName: 'setSendLibrary',
-      args: [oappAddress as `0x${string}`, remoteEid, proto.sendUln302],
+      functionName: "setSendLibrary",
+      args: [oapp, remoteEid, proto.sendUln302],
     });
 
-    await client.writeContract({
+    // 2) Receive library
+    await sendAndWait("2/4 setReceiveLibrary", {
       address: proto.endpoint,
       abi: ENDPOINT_ABI,
-      functionName: 'setReceiveLibrary',
-      args: [oappAddress as `0x${string}`, remoteEid, proto.receiveUln302, BigInt(0)],
+      functionName: "setReceiveLibrary",
+      args: [oapp, remoteEid, proto.receiveUln302, BigInt(0)],
     });
 
-    // 2) Encode ULN (DVN) config
-    // struct: (uint64 confirmations, uint8 requiredDVNCount, uint8 optionalDVNCount, uint8 optionalDVNThreshold, address[] requiredDVNs, address[] optionalDVNs)
+    // Encode configs
     const ulnConfig = encodeAbiParameters(
-      parseAbiParameters('uint64, uint8, uint8, uint8, address[], address[]'),
+      parseAbiParameters("uint64, uint8, uint8, uint8, address[], address[]"),
       [
-        BigInt(5),          // confirmations
-        1,                  // requiredDVNCount
-        0,                  // optionalDVNCount
-        0,                  // optionalDVNThreshold
-        [proto.dvn],        // requiredDVNs (sorted)
-        [],                 // optionalDVNs
+        BigInt(5),     // confirmations
+        1,             // requiredDVNCount
+        0,             // optionalDVNCount
+        0,             // optionalDVNThreshold
+        [proto.dvn],   // requiredDVNs
+        [],            // optionalDVNs
       ]
     );
 
-    // 3) Encode Executor config
-    // struct: (uint32 maxMessageSize, address executor)
     const executorConfig = encodeAbiParameters(
-      parseAbiParameters('uint32, address'),
+      parseAbiParameters("uint32, address"),
       [10000, proto.executor]
     );
 
-    // 4) Send-side config (Executor + ULN) на SendUln302
-    await client.writeContract({
+    // 3) Send config (Executor + ULN)
+    await sendAndWait("3/4 setConfig SEND (Executor+DVN)", {
       address: proto.endpoint,
       abi: ENDPOINT_ABI,
-      functionName: 'setConfig',
+      functionName: "setConfig",
       args: [
-        oappAddress as `0x${string}`,
+        oapp,
         proto.sendUln302,
         [
           { eid: remoteEid, configType: CONFIG_TYPE_EXECUTOR, config: executorConfig },
@@ -698,13 +716,13 @@ const configurePathway = async (
       ],
     });
 
-    // 5) Receive-side ULN на ReceiveUln302
-    await client.writeContract({
+    // 4) Receive config (ULN only)
+    await sendAndWait("4/4 setConfig RECEIVE (DVN)", {
       address: proto.endpoint,
       abi: ENDPOINT_ABI,
-      functionName: 'setConfig',
+      functionName: "setConfig",
       args: [
-        oappAddress as `0x${string}`,
+        oapp,
         proto.receiveUln302,
         [
           { eid: remoteEid, configType: CONFIG_TYPE_ULN, config: ulnConfig },
@@ -712,7 +730,7 @@ const configurePathway = async (
       ],
     });
 
-    alert(`✅ DVN/Executor configured on ${getNetworkName(localChainId)} → EID ${remoteEid}`);
+    alert(`✅ Done on ${getNetworkName(localChainId)} for remote EID ${remoteEid}\n\nТеперь то же самое на ДРУГОЙ сети пути.`);
   } catch (error: any) {
     console.error(error);
     alert(`Config error: ${error?.shortMessage || error?.message || error}`);
