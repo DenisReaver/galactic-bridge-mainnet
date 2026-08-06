@@ -1378,7 +1378,7 @@ const sendToken = async () => {
     </button>
     {/* добавь другие пары по тому же шаблону */}
   </div>
-
+</div>
             
 
             {/* ==================== SOCIAL LINKS ==================== */}
@@ -1412,6 +1412,5 @@ const sendToken = async () => {
         </div>
       </div>
     </div>
-      </div>
   );
 }
