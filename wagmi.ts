@@ -27,7 +27,7 @@ const tempoMainnet = {
   nativeCurrency: { name: 'USD', symbol: 'USD', decimals: 18 },
   rpcUrls: {
     default: {
-      http: ['https://tempo-mainnet.drpc.org'],
+      http: ['https://lb.routeme.sh/rpc/evm/4217'],
     },
   },
   blockExplorers: {
@@ -48,7 +48,7 @@ export const config = getDefaultConfig({
     [optimism.id]: http('https://mainnet.optimism.io'),
     [arbitrum.id]: http('https://arb1.arbitrum.io/rpc'),
     [arcMainnet.id]: http('https://rpc-main-1.archiechain.io'),
-    [tempoMainnet.id]: http('https://tempo-mainnet.drpc.org'),
+    [tempoMainnet.id]: http('https://lb.routeme.sh/rpc/evm/4217'),
   },
   ssr: true,
 });
