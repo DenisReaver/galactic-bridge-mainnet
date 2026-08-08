@@ -717,13 +717,15 @@ const configurePathway = async (
   if (!proto) return alert("Protocol addresses not set for this chain");
 
   if (
-    !proto.sendUln302 ||
+  !proto.sendUln302 ||
     proto.sendUln302 === "0x0000000000000000000000000000000000000000" ||
-    !proto.dvn ||
-    proto.dvn === "0x0000000000000000000000000000000000000000"
+    !proto.dvns ||
+    proto.dvns.length === 0 ||
+    proto.dvns.some((d) => !d || d === "0x0000000000000000000000000000000000000000")
   ) {
-    return alert("Заполни реальные адреса SendUln302 / ReceiveUln302 / Executor / DVN для этой сети");
-  }
+    return alert(
+      "Заполни реальные адреса SendUln302 / ReceiveUln302 / Executor / DVNs для этой сети"
+    );
 
   if (chain?.id !== localChainId) {
     await switchChain({ chainId: localChainId });
@@ -740,7 +742,7 @@ const configurePathway = async (
 
     const oapp = oappAddress as `0x${string}`;
 
-    // ---- helpers ----
+     // ---- helpers ----
     const sendAndWait = async (label: string, req: any) => {
       alert(`${label}\nConfirm in MetaMask...`);
       const hash = await client.writeContract(req);
@@ -768,7 +770,7 @@ const configurePathway = async (
       args: [oapp, remoteEid, proto.receiveUln302, BigInt(0)],
     });
 
- // Encode configs — 2 DVN (Labs + Nethermind), sorted ascending
+    // Encode configs — 2 DVN (Labs + Nethermind), sorted ascending
     const dvns = [...(proto.dvns || [])].sort((a, b) =>
       a.toLowerCase().localeCompare(b.toLowerCase())
     ) as `0x${string}`[];
@@ -780,12 +782,12 @@ const configurePathway = async (
     const ulnConfig = encodeAbiParameters(
       parseAbiParameters("uint64, uint8, uint8, uint8, address[], address[]"),
       [
-        BigInt(5),           // confirmations
-        dvns.length,         // requiredDVNCount (2)
-        0,                   // optionalDVNCount
-        0,                   // optionalDVNThreshold
-        dvns,                // requiredDVNs
-        [],                  // optionalDVNs
+        BigInt(5),       // confirmations
+        dvns.length,     // requiredDVNCount (2)
+        0,               // optionalDVNCount
+        0,               // optionalDVNThreshold
+        dvns,            // requiredDVNs
+        [],              // optionalDVNs
       ]
     );
 
@@ -817,11 +819,13 @@ const configurePathway = async (
       args: [
         oapp,
         proto.receiveUln302,
-        [
-          { eid: remoteEid, configType: CONFIG_TYPE_ULN, config: ulnConfig },
-        ],
+        [{ eid: remoteEid, configType: CONFIG_TYPE_ULN, config: ulnConfig }],
       ],
     });
+
+    alert(
+      `✅ Done on ${getNetworkName(localChainId)} for remote EID ${remoteEid}\n\nТеперь то же самое на ДРУГОЙ сети пути.`
+    );
 
     // 4) Receive config (ULN only)
     await sendAndWait("4/4 setConfig RECEIVE (DVN)", {
