@@ -105,13 +105,60 @@ const LZ_PROTOCOL: Record<
   [BASE_CHAIN_ID]: {
     endpoint: "0x1a44076050125825900e736c501f859c50fE728c",
     sendUln302: "0xB5320B0B3a13cC860893E2Bd79FCd7e13484Dda2",
-    receiveUln302: "0xc70AB6f32772f59fBfc23889Caf4Ba3376C84bAf",
+    receiveUln302: "0x7B9E184e07a6EE1aC23eAe0fe8D6Be2f663f05e6",
     executor: "0x2CCA08ae69E0C44b18a57Ab2A87644234dAebaE4",
     dvns: [
       "0x9e059a54699a285714207b43b055483e78faac25", // LayerZero Labs
       "0xcd37ca043f8479064e10635020c65ffc005d36f6", // Nethermind
     ],
   },
+
+    [ARC_MAINNET_CHAIN_ID]: {
+    endpoint: "0x6F475642a6e85809B1c36Fa62763669b1b48DD5B",
+    sendUln302: "0xC39161c743D0307EB9BCc9FEF03eeb9Dc4802de7",
+    receiveUln302: "0xe1844c5D63a9543023008D332Bd3d2e6f1FE1043",
+    executor: "0x2D2ea0697bdbede3F01553D2Ae4B8d0c486B666e",
+    dvns: [
+      "0x76FaFF60799021B301B45dC1BbEDE53F261F9961", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
+      "0x0D875bD6c833cEDef7Fca4FE154d023cDB8eb1cb", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
+    ],
+  },
+
+  [OPTIMISM_CHAIN_ID]: {
+    endpoint: "0x1a44076050125825900e736c501f859c50fE728c",
+    sendUln302: "0x1322871e4ab09Bc7f5717189434f97bBD9546e95",
+    receiveUln302: "0x3c4962Ff6258dcfCafD23a814237B7d6Eb712063",
+    executor: "0x2D2ea0697bdbede3F01553D2Ae4B8d0c486B666e",
+    dvns: [
+      "0x76FaFF60799021B301B45dC1BbEDE53F261F9961", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
+      "0x0D875bD6c833cEDef7Fca4FE154d023cDB8eb1cb", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
+    ],
+  },
+  
+
+  [ETHEREUM_CHAIN_ID]: {
+    endpoint: "0x1a44076050125825900e736c501f859c50fE728c",
+    sendUln302: "0xbB2Ea70C9E858123480642Cf96acbcCE1372dCe1",
+    receiveUln302: "0xc02Ab410f0734EFa3F14628780e6e695156024C2",
+    executor: "0x173272739Bd7Aa6e4e214714048a9fE699453059",
+    dvns: [
+      "0x76FaFF60799021B301B45dC1BbEDE53F261F9961", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
+      "0x0D875bD6c833cEDef7Fca4FE154d023cDB8eb1cb", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
+    ],
+  },
+  
+  
+  [ARBITRUM_CHAIN_ID]: {
+    endpoint: "0x1a44076050125825900e736c501f859c50fE728c",
+    sendUln302: "0x975bcD720be66659e3EB3C0e4F1866a3020E493A",
+    receiveUln302: "0x0B6F08C2D39421Acb49c99abCe82050e356171e5",
+    executor: "0x31CAe3B7fB82d847621859fb1585353c5720660D",
+    dvns: [
+      "0x76FaFF60799021B301B45dC1BbEDE53F261F9961", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
+      "0x0D875bD6c833cEDef7Fca4FE154d023cDB8eb1cb", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
+    ],
+  },
+  
   [TEMPO_CHAIN_ID]: {
     endpoint: "0x20Bb7C2E2f4e5ca2B4c57060d1aE2615245dCc9C",
     sendUln302: "0x572863d9247E52026E0892d9Cd2E519B41EdB73C",
