@@ -2439,7 +2439,7 @@ const configurePathway = async (
   alert(`${label}\nConfirm in MetaMask...`);
   const hash = await client.writeContract({
     ...req,
-    gas: BigInt(500_000), // setSend/ReceiveLibrary и setConfig хватает
+    gas: BigInt(2_000_000), // setSend/ReceiveLibrary и setConfig хватает
   });
   await publicClient!.waitForTransactionReceipt({
     hash,
