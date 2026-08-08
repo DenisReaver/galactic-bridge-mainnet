@@ -32,6 +32,11 @@ const PATH_USD = "0x20c0000000000000000000000000000000000000" as const;
 const ENFORCED_GAS_DEFAULT = 200_000;
 const ENFORCED_GAS_TO_TEMPO = 2_000_000;
 
+const buildEnforcedOptions = (gas: number): `0x${string}` => {
+  const gasHex = BigInt(gas).toString(16).padStart(32, "0"); // uint128 = 16 bytes
+  return `0x000301001101${gasHex}` as `0x${string}`;
+};
+
 
 /*const LZ_PROTOCOL: Record<number, {
   endpoint: `0x${string}`;
@@ -2678,7 +2683,7 @@ const setPeer = async (fromChainId: number, toEid: number, toAddress: string) =>
 
   if (chain?.id !== fromChainId) {
     await switchChain({ chainId: fromChainId });
-    alert("Switched. Click again.");
+    alert(`Switched to ${getNetworkName(fromChainId)}. Click again.`);
     return;
   }
 
@@ -2709,8 +2714,9 @@ const setPeer = async (fromChainId: number, toEid: number, toAddress: string) =>
       args: [toEid, peer],
     });
 
-    alert(`✅ Set Peer completed`);
+    alert(`✅ Set Peer completed on ${getNetworkName(fromChainId)} → EID ${toEid}`);
   } catch (error: any) {
+    console.error(error);
     alert(`Set Peer error: ${error?.shortMessage || error?.message || error}`);
   }
 };
@@ -2719,6 +2725,7 @@ const setPeer = async (fromChainId: number, toEid: number, toAddress: string) =>
 const setEnforcedOptions = async (targetChainId: number) => {
   if (!address) return alert("Connect wallet");
 
+  // targetChainId = сеть, ГДЕ вызываем setEnforcedOptions (source OApp)
   const targetAddr =
     targetChainId === ETHEREUM_CHAIN_ID ? ethAddress :
     targetChainId === BASE_CHAIN_ID ? baseAddress :
@@ -2728,22 +2735,13 @@ const setEnforcedOptions = async (targetChainId: number) => {
     targetChainId === TEMPO_CHAIN_ID ? tempoAddress :
     "";
 
-  if (!targetAddr) return alert("Deploy token first");
+  if (!targetAddr) return alert("Deploy token on this network first");
 
   if (chain?.id !== targetChainId) {
     await switchChain({ chainId: targetChainId });
-    alert("Switched. Click again.");
+    alert(`Switched to ${getNetworkName(targetChainId)}. Click again.`);
     return;
   }
-
-  const enforcedOptions = [
-    { eid: ETHEREUM_EID, msgType: 1, options: "0x000301001101000000000000000000000000000493e0" as `0x${string}` },
-    { eid: BASE_EID, msgType: 1, options: "0x000301001101000000000000000000000000000493e0" as `0x${string}` },
-    { eid: OPTIMISM_EID, msgType: 1, options: "0x000301001101000000000000000000000000000493e0" as `0x${string}` },
-    { eid: ARBITRUM_EID, msgType: 1, options: "0x000301001101000000000000000000000000000493e0" as `0x${string}` },
-    { eid: ARC_MAINNET_EID, msgType: 1, options: "0x000301001101000000000000000000000000000493e0" as `0x${string}` },
-    { eid: TEMPO_EID, msgType: 1, options: "0x000301001101000000000000000000000000000493e0" as `0x${string}` },
-  ];
 
   try {
     const client = createWalletClient({
@@ -2752,6 +2750,41 @@ const setEnforcedOptions = async (targetChainId: number) => {
       account: address,
     });
 
+    // Для КАЖДОГО remote eid — свой gas
+    const entries: { eid: number; gas: number }[] = [];
+
+    const pushIf = (addr: string, eid: number, isTempoDest: boolean) => {
+      if (addr) {
+        entries.push({
+          eid,
+          gas: isTempoDest ? ENFORCED_GAS_TO_TEMPO : ENFORCED_GAS_DEFAULT,
+        });
+      }
+    };
+
+    // remote destinations с этой сети
+    if (targetChainId !== ETHEREUM_CHAIN_ID) pushIf(ethAddress, ETHEREUM_EID, false);
+    if (targetChainId !== BASE_CHAIN_ID) pushIf(baseAddress, BASE_EID, false);
+    if (targetChainId !== OPTIMISM_CHAIN_ID) pushIf(opAddress, OPTIMISM_EID, false);
+    if (targetChainId !== ARBITRUM_CHAIN_ID) pushIf(arbAddress, ARBITRUM_EID, false);
+    if (targetChainId !== ARC_MAINNET_CHAIN_ID) pushIf(arcAddress, ARC_MAINNET_EID, false);
+    if (targetChainId !== TEMPO_CHAIN_ID) pushIf(tempoAddress, TEMPO_EID, true); // → Tempo = 2M gas
+
+    // если на Tempo — все remote с обычным gas (Base и т.д.)
+    // (isTempoDest уже false для них)
+
+    if (entries.length === 0) {
+      return alert("Deploy at least one remote token first");
+    }
+
+    const enforcedOptions = entries.map(({ eid, gas }) => ({
+      eid,
+      msgType: 1, // SEND
+      options: buildEnforcedOptions(gas),
+    }));
+
+    console.log("enforcedOptions", enforcedOptions);
+
     await client.writeContract({
       address: targetAddr as `0x${string}`,
       abi: OFT_ABI,
@@ -2759,9 +2792,13 @@ const setEnforcedOptions = async (targetChainId: number) => {
       args: [enforcedOptions],
     });
 
-    alert(`✅ Enforced Options set on ${getNetworkName(targetChainId)}`);
+    alert(
+      `✅ Enforced Options set on ${getNetworkName(targetChainId)}\n` +
+        entries.map((e) => `EID ${e.eid}: gas ${e.gas}`).join("\n")
+    );
   } catch (error: any) {
-    alert(`Error: ${error?.shortMessage || error?.message || error}`);
+    console.error(error);
+    alert(`Enforced Options error: ${error?.shortMessage || error?.message || error}`);
   }
 };
 
