@@ -6,28 +6,34 @@ import { createWalletClient, custom, parseUnits } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { encodeAbiParameters, parseAbiParameters } from 'viem';
 
-// ==================== MAINNET CONSTANTS ====================
+// ==================== CHAIN IDS ====================
 const ETHEREUM_CHAIN_ID = 1;
 const BASE_CHAIN_ID = 8453;
 const OPTIMISM_CHAIN_ID = 10;
 const ARBITRUM_CHAIN_ID = 42161;
 const ARC_MAINNET_CHAIN_ID = 5042;
+const TEMPO_CHAIN_ID = 4217;
 
+// ==================== LAYERZERO EIDs ====================
 const ETHEREUM_EID = 30101;
 const BASE_EID = 30184;
 const OPTIMISM_EID = 30111;
 const ARBITRUM_EID = 30110;
-const ARC_MAINNET_EID = 30417;
+const ARC_MAINNET_EID = 30417; // уточни по docs, если ARC ещё не юзаешь
+const TEMPO_EID = 30410;
 
 const CREATOR_ADDRESS = "0xD5635DaE1b8D3f4484eeE01225eD641f367cE40a" as const;
 
-const LZ_ENDPOINT = '0x1a44076050125825900e736c501f859c50fE728c' as const;
+const LZ_ENDPOINT = "0x1a44076050125825900e736c501f859c50fE728c" as const;
+const LZ_ENDPOINT_TEMPO = "0x20Bb7C2E2f4e5ca2B4c57060d1aE2615245dCc9C" as const;
+const LZD_ADDRESS = "0x0cEb237E109eE22374a567c6b09F373C73FA4cBb" as const;
+const PATH_USD = "0x20c0000000000000000000000000000000000000" as const;
 
-//BLOCK TEMPO BEGIN
-const TEMPO_CHAIN_ID = 4217;
-const TEMPO_EID = 30410;
+const ENFORCED_GAS_DEFAULT = 200_000;
+const ENFORCED_GAS_TO_TEMPO = 2_000_000;
 
-const LZ_PROTOCOL: Record<number, {
+
+/*const LZ_PROTOCOL: Record<number, {
   endpoint: `0x${string}`;
   sendUln302: `0x${string}`;
   receiveUln302: `0x${string}`;
@@ -82,8 +88,42 @@ const LZ_PROTOCOL: Record<number, {
     executor: '0xf851abCa1d0fD1Df8eAba6de466a102996b7d7B2',
     dvn: '0x3436d350103a9dfA252a04f102f9f10f58Ff450C',
   },
-};
+};*/
 
+
+// ==================== PROTOCOL (для Configure DVN) ====================
+const LZ_PROTOCOL: Record<
+  number,
+  {
+    endpoint: `0x${string}`;
+    sendUln302: `0x${string}`;
+    receiveUln302: `0x${string}`;
+    executor: `0x${string}`;
+    dvns: `0x${string}`[]; // Labs + Nethermind, сортируем в коде
+  }
+> = {
+  [BASE_CHAIN_ID]: {
+    endpoint: "0x1a44076050125825900e736c501f859c50fE728c",
+    sendUln302: "0xB5320B0B3a13cC860893E2Bd79FCd7e13484Dda2",
+    receiveUln302: "0xc70AB6f32772f59fBfc23889Caf4Ba3376C84bAf",
+    executor: "0x2CCA08ae69E0C44b18a57Ab2A87644234dAebaE4",
+    dvns: [
+      "0x9e059a54699a285714207b43b055483e78faac25", // LayerZero Labs
+      "0xcd37ca043f8479064e10635020c65ffc005d36f6", // Nethermind
+    ],
+  },
+  [TEMPO_CHAIN_ID]: {
+    endpoint: "0x20Bb7C2E2f4e5ca2B4c57060d1aE2615245dCc9C",
+    sendUln302: "0x572863d9247E52026E0892d9Cd2E519B41EdB73C",
+    receiveUln302: "0x0B6F08C2D39421Acb49c99abCe82050e356171e5",
+    executor: "0xf851abCa1d0fD1Df8eAba6de466a102996b7d7B2",
+    dvns: [
+      "0x76FaFF60799021B301B45dC1BbEDE53F261F9961", // LayerZero Labs
+      "0x0D875bD6c833cEDef7Fca4FE154d023cDB8eb1cb", // Nethermind
+    ],
+  },
+  // ETH / OP / Arb / ARC — добавим позже по тому же шаблону
+};
 
 const ENDPOINT_ABI = [
   {
@@ -683,16 +723,24 @@ const configurePathway = async (
       args: [oapp, remoteEid, proto.receiveUln302, BigInt(0)],
     });
 
-    // Encode configs
+ // Encode configs — 2 DVN (Labs + Nethermind), sorted ascending
+    const dvns = [...(proto.dvns || [])].sort((a, b) =>
+      a.toLowerCase().localeCompare(b.toLowerCase())
+    ) as `0x${string}`[];
+
+    if (dvns.length < 1) {
+      throw new Error("No DVNs in LZ_PROTOCOL for this chain");
+    }
+
     const ulnConfig = encodeAbiParameters(
       parseAbiParameters("uint64, uint8, uint8, uint8, address[], address[]"),
       [
-        BigInt(5),     // confirmations
-        1,             // requiredDVNCount
-        0,             // optionalDVNCount
-        0,             // optionalDVNThreshold
-        [proto.dvn],   // requiredDVNs
-        [],            // optionalDVNs
+        BigInt(5),           // confirmations
+        dvns.length,         // requiredDVNCount (2)
+        0,                   // optionalDVNCount
+        0,                   // optionalDVNThreshold
+        dvns,                // requiredDVNs
+        [],                  // optionalDVNs
       ]
     );
 
@@ -702,7 +750,7 @@ const configurePathway = async (
     );
 
     // 3) Send config (Executor + ULN)
-    await sendAndWait("3/4 setConfig SEND (Executor+DVN)", {
+    await sendAndWait("3/4 setConfig SEND (Executor+2 DVN)", {
       address: proto.endpoint,
       abi: ENDPOINT_ABI,
       functionName: "setConfig",
@@ -711,6 +759,20 @@ const configurePathway = async (
         proto.sendUln302,
         [
           { eid: remoteEid, configType: CONFIG_TYPE_EXECUTOR, config: executorConfig },
+          { eid: remoteEid, configType: CONFIG_TYPE_ULN, config: ulnConfig },
+        ],
+      ],
+    });
+
+    // 4) Receive config (ULN only)
+    await sendAndWait("4/4 setConfig RECEIVE (2 DVN)", {
+      address: proto.endpoint,
+      abi: ENDPOINT_ABI,
+      functionName: "setConfig",
+      args: [
+        oapp,
+        proto.receiveUln302,
+        [
           { eid: remoteEid, configType: CONFIG_TYPE_ULN, config: ulnConfig },
         ],
       ],
