@@ -124,8 +124,8 @@ const LZ_PROTOCOL: Record<
     receiveUln302: "0xe1844c5D63a9543023008D332Bd3d2e6f1FE1043",
     executor: "0x4208D6E27538189bB48E603D6123A94b8Abe0A0b",
     dvns: [
-      "0x282b3386571f7f794450d5789911a9804fa346b4", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
-      "0x282b3386571f7f794450d5789911a9804fa346b4", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
+      "0x282b3386571f7f794450d5789911a9804fa346b4", // LayerZero LAbs
+      "0x282b3386571f7f794450d5789911a9804fa346b4", // ???
     ],
   },
 
@@ -135,8 +135,8 @@ const LZ_PROTOCOL: Record<
     receiveUln302: "0x3c4962Ff6258dcfCafD23a814237B7d6Eb712063",
     executor: "0x2D2ea0697bdbede3F01553D2Ae4B8d0c486B666e",
     dvns: [
-      "0x969a0bdd86a230345ad87a6a381de5ed9e6cda85", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
-      "0x6a02d83e8d433304bba74ef1c427913958187142", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
+      "0x6a02d83e8d433304bba74ef1c427913958187142", // layerZero Labs
+      "0xa7b5189bca84cd304d8553977c7c614329750d99", // Nethermind
     ],
   },
   
@@ -147,8 +147,8 @@ const LZ_PROTOCOL: Record<
     receiveUln302: "0xc02Ab410f0734EFa3F14628780e6e695156024C2",
     executor: "0x173272739Bd7Aa6e4e214714048a9fE699453059",
     dvns: [
-      "0x76FaFF60799021B301B45dC1BbEDE53F261F9961", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
-      "0x589dedbd617e0cbcb916a9223f4d1300c294236b", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
+      "0x589dedbd617e0cbcb916a9223f4d1300c294236b", // 0x589dedbd617e0cbcb916a9223f4d1300c294236b
+      "0xa59ba433ac34d2927232918ef5b2eaafcf130ba5", // NETHERMID
     ],
   },
   
@@ -159,8 +159,8 @@ const LZ_PROTOCOL: Record<
     receiveUln302: "0x7B9E184e07a6EE1aC23eAe0fe8D6Be2f663f05e6",
     executor: "0x31CAe3B7fB82d847621859fb1585353c5720660D",
     dvns: [
-      "0x2f55C492897526677C5B68fb199ea31E2c126416", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
-      "0xd56e4eab23cb81f43168f9f45211eb027b9ac7cc", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
+      "0x2f55c492897526677c5b68fb199ea31e2c126416", // LAYERZERO LABS
+      "0xa7b5189bca84cd304d8553977c7c614329750d99", // NETHERMID
     ],
   },
   
