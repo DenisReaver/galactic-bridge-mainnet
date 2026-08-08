@@ -2471,22 +2471,23 @@ const configurePathway = async (
       throw new Error("No DVNs in LZ_PROTOCOL for this chain");
     }
 
-    const ulnConfig = encodeAbiParameters(
-      parseAbiParameters("uint64, uint8, uint8, uint8, address[], address[]"),
-      [
-        BigInt(5),
-        dvns.length,
-        0,
-        0,
-        dvns,
-        [],
-      ]
-    );
-
-    const executorConfig = encodeAbiParameters(
-      parseAbiParameters("uint32, address"),
-      [10000, proto.executor]
-    );
+  const executorConfig = encodeAbiParameters(
+  [
+    {
+      type: "tuple",
+      components: [
+        { name: "maxMessageSize", type: "uint32" },
+        { name: "executor", type: "address" },
+      ],
+    },
+  ],
+  [
+    {
+      maxMessageSize: 10000,
+      executor: proto.executor,
+    },
+  ]
+);
 
     // 3) Send config
     await sendAndWait("3/4 setConfig SEND (Executor+2 DVN)", {
