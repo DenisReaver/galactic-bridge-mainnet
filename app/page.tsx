@@ -2416,7 +2416,7 @@ const configurePathway = async (
     proto.dvns.some((d) => !d || d === "0x0000000000000000000000000000000000000000")
   ) {
     return alert(
-      "Заполни реальные адреса SendUln302 / ReceiveUln302 / Executor / DVNs для этой сети"
+      "Fill in the actual addresses for SendUln302, ReceiveUln302, Executor, and DVNs for this network."
     );
   }
 
@@ -2546,7 +2546,7 @@ const executorConfig = encodeAbiParameters(
     });
 
     alert(
-      `✅ Done on ${getNetworkName(localChainId)} for remote EID ${remoteEid}\n\nТеперь то же самое на ДРУГОЙ сети пути.`
+      `✅ Done on ${getNetworkName(localChainId)} for remote EID ${remoteEid}\n\nNow, the same thing on a DIFFERENT network path.`
     );
   } catch (error: any) {
     console.error(error);
@@ -3384,10 +3384,10 @@ const sendToken = async () => {
 <div>
   <h2 className="text-2xl font-semibold mb-4 text-white">6. Configure DVN / Executor</h2>
   <p className="text-sm text-yellow-400 mb-2">
-    Нужно на <strong>обеих</strong> сторонах пути. Без этого quoteSend падает с ошибкой DVNs/Executor.
+    Need to <strong>of both</strong> sides of the path. Without this, quoteSend fails with a DVNs/Executor error.
   </p>
   <p className="text-sm text-gray-400 mb-4">
-    На Tempo газ = pathUSD. Если MetaMask «не удастся» — выключи Smart Transactions или сделай шаг через Hardhat.
+    For Tempo, gas = pathUSD. If MetaMask fails, disable Smart Transactions or use Hardhat.
   </p>
 
   <p className="text-sm text-white/70 mb-2 font-medium">Tempo ↔ другие сети</p>
