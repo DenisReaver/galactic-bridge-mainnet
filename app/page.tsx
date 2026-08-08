@@ -1065,7 +1065,7 @@ const setEnforcedOptions = async (targetChainId: number) => {
   }
 };
 
-// ==================== SEND TOKEN ====================
+/*// ==================== SEND TOKEN ====================
 const sendToken = async () => {
   if (!address) return alert("Connect wallet");
   if (!recipient) return alert("Enter recipient address");
@@ -1203,6 +1203,135 @@ const sendToken = async () => {
     alert(`✅ Transaction sent! Hash: ${hash}`);
   } catch (error: any) {
     alert(`Send failed: ${error?.shortMessage || error?.message || error}`);
+  }
+};*/
+
+
+
+  const configurePathway = async (
+  localChainId: number,
+  remoteEid: number,
+  oappAddress: string
+) => {
+  if (!address) return alert("Connect wallet");
+  if (!oappAddress) return alert("OApp address missing");
+
+  const proto = LZ_PROTOCOL[localChainId];
+  if (!proto) return alert("Protocol addresses not set for this chain");
+
+  if (
+    !proto.sendUln302 ||
+    proto.sendUln302 === "0x0000000000000000000000000000000000000000" ||
+    !proto.dvns ||
+    proto.dvns.length === 0 ||
+    proto.dvns.some((d) => !d || d === "0x0000000000000000000000000000000000000000")
+  ) {
+    return alert(
+      "Заполни реальные адреса SendUln302 / ReceiveUln302 / Executor / DVNs для этой сети"
+    );
+  }
+
+  if (chain?.id !== localChainId) {
+    await switchChain({ chainId: localChainId });
+    alert(`Switched to ${getNetworkName(localChainId)}. Click again.`);
+    return;
+  }
+
+  try {
+    const client = createWalletClient({
+      chain: chain!,
+      transport: custom(window.ethereum!),
+      account: address,
+    });
+
+    const oapp = oappAddress as `0x${string}`;
+
+    const sendAndWait = async (label: string, req: any) => {
+      alert(`${label}\nConfirm in MetaMask...`);
+      const hash = await client.writeContract(req);
+      await publicClient!.waitForTransactionReceipt({
+        hash,
+        timeout: 300_000,
+        pollingInterval: 5_000,
+      });
+      return hash;
+    };
+
+    // 1) Send library
+    await sendAndWait("1/4 setSendLibrary", {
+      address: proto.endpoint,
+      abi: ENDPOINT_ABI,
+      functionName: "setSendLibrary",
+      args: [oapp, remoteEid, proto.sendUln302],
+    });
+
+    // 2) Receive library
+    await sendAndWait("2/4 setReceiveLibrary", {
+      address: proto.endpoint,
+      abi: ENDPOINT_ABI,
+      functionName: "setReceiveLibrary",
+      args: [oapp, remoteEid, proto.receiveUln302, BigInt(0)],
+    });
+
+    // Encode configs — 2 DVN
+    const dvns = [...(proto.dvns || [])].sort((a, b) =>
+      a.toLowerCase().localeCompare(b.toLowerCase())
+    ) as `0x${string}`[];
+
+    if (dvns.length < 1) {
+      throw new Error("No DVNs in LZ_PROTOCOL for this chain");
+    }
+
+    const ulnConfig = encodeAbiParameters(
+      parseAbiParameters("uint64, uint8, uint8, uint8, address[], address[]"),
+      [
+        BigInt(5),
+        dvns.length,
+        0,
+        0,
+        dvns,
+        [],
+      ]
+    );
+
+    const executorConfig = encodeAbiParameters(
+      parseAbiParameters("uint32, address"),
+      [10000, proto.executor]
+    );
+
+    // 3) Send config
+    await sendAndWait("3/4 setConfig SEND (Executor+2 DVN)", {
+      address: proto.endpoint,
+      abi: ENDPOINT_ABI,
+      functionName: "setConfig",
+      args: [
+        oapp,
+        proto.sendUln302,
+        [
+          { eid: remoteEid, configType: CONFIG_TYPE_EXECUTOR, config: executorConfig },
+          { eid: remoteEid, configType: CONFIG_TYPE_ULN, config: ulnConfig },
+        ],
+      ],
+    });
+
+    // 4) Receive config
+    await sendAndWait("4/4 setConfig RECEIVE (2 DVN)", {
+      address: proto.endpoint,
+      abi: ENDPOINT_ABI,
+      functionName: "setConfig",
+      args: [
+        oapp,
+        proto.receiveUln302,
+        [{ eid: remoteEid, configType: CONFIG_TYPE_ULN, config: ulnConfig }],
+      ],
+    });
+
+    alert(
+      `✅ Done on ${getNetworkName(localChainId)} for remote EID ${remoteEid}\n\nТеперь то же самое на ДРУГОЙ сети пути.`
+    );
+  } catch (error: any) {
+    console.error(error);
+    alert(`Config error: ${error?.shortMessage || error?.message || error}`);
   }
 };
 
