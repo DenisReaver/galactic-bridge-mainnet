@@ -636,7 +636,7 @@ const OFT_ABI = [
 // ============================================================
 
 
-const ERC20_ABI = [
+/*const ERC20_ABI = [
     {
       "inputs": [
         {
@@ -2295,7 +2295,7 @@ const ERC20_ABI = [
       "stateMutability": "nonpayable",
       "type": "function"
     }
-  ] as const;
+  ] as const;*/
 
 export default function GalacticBridge() {
   const { address, chain } = useAccount();
