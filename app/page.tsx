@@ -2520,7 +2520,6 @@ const configurePathway = async (
 };
 
   
-// ==================== DEPLOY ====================
 const deploy = async (targetChainId: number) => {
   if (!address) return alert("Connect your wallet");
 
@@ -2530,6 +2529,18 @@ const deploy = async (targetChainId: number) => {
     return;
   }
 
+  const isTempo = targetChainId === TEMPO_CHAIN_ID;
+  const endpoint = isTempo ? LZ_ENDPOINT_TEMPO : LZ_ENDPOINT;
+  const bytecode = (isTempo ? TEMPO_OFT_BYTECODE : MORGEN_BYTECODE) as `0x${string}`;
+
+  if (!bytecode || bytecode === "0x" || bytecode.length < 10) {
+    return alert(
+      isTempo
+        ? "TEMPO_OFT_BYTECODE is empty — paste bytecode from MyOFTAlt.json"
+        : "MORGEN_BYTECODE is empty"
+    );
+  }
+
   try {
     const client = createWalletClient({
       chain: chain!,
@@ -2537,21 +2548,23 @@ const deploy = async (targetChainId: number) => {
       account: address,
     });
 
-    // Tempo = OFTAlt (другой endpoint + bytecode)
-    const isTempo = targetChainId === TEMPO_CHAIN_ID;
+    // name + symbol как в рабочем Hardhat-деплое
+    const tokenName = name || "Morgen";
+    const tokenSymbol = symbol || "MRG";
 
-    const endpoint = isTempo ? LZ_ENDPOINT_TEMPO : LZ_ENDPOINT;
-    const bytecode = isTempo
-      ? (TEMPO_OFT_BYTECODE as `0x${string}`)
-      : (MORGEN_BYTECODE as `0x${string}`);
+    alert(
+      isTempo
+        ? "Deploying OFTAlt on Tempo...\nConfirm in MetaMask (gas = pathUSD)"
+        : `Deploying OFT on ${getNetworkName(targetChainId)}...\nConfirm in MetaMask`
+    );
 
     const txHash = await client.deployContract({
       abi: OFT_ABI,
       bytecode,
-      args: [name, symbol, endpoint, address],
+      args: [tokenName, tokenSymbol, endpoint, address],
     });
 
-    alert(`Transaction sent!\nHash: ${txHash}\nWaiting for confirmation...`);
+    alert(`Tx sent!\n${txHash}\nWaiting for confirmation...`);
 
     const receipt = await publicClient!.waitForTransactionReceipt({
       hash: txHash as `0x${string}`,
@@ -2562,10 +2575,10 @@ const deploy = async (targetChainId: number) => {
     if (receipt.contractAddress) {
       saveAddress(targetChainId, receipt.contractAddress);
       alert(
-        `🎉 Successfully deployed on ${getNetworkName(targetChainId)}!\nAddress: ${receipt.contractAddress}`
+        `🎉 Deployed on ${getNetworkName(targetChainId)}!\nAddress: ${receipt.contractAddress}`
       );
     } else {
-      alert("Transaction confirmed, but contract address not found. Use manual input.");
+      alert("Confirmed, but no contractAddress. Use manual input.");
     }
   } catch (error: any) {
     console.error(error);
