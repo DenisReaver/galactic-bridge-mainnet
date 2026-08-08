@@ -122,10 +122,10 @@ const LZ_PROTOCOL: Record<
     endpoint: "0x6F475642a6e85809B1c36Fa62763669b1b48DD5B",
     sendUln302: "0xC39161c743D0307EB9BCc9FEF03eeb9Dc4802de7",
     receiveUln302: "0xe1844c5D63a9543023008D332Bd3d2e6f1FE1043",
-    executor: "0x2D2ea0697bdbede3F01553D2Ae4B8d0c486B666e",
+    executor: "0x4208D6E27538189bB48E603D6123A94b8Abe0A0b",
     dvns: [
-      "0x76FaFF60799021B301B45dC1BbEDE53F261F9961", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
-      "0x0D875bD6c833cEDef7Fca4FE154d023cDB8eb1cb", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
+      "0x282b3386571f7f794450d5789911a9804fa346b4", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
+      "0x282b3386571f7f794450d5789911a9804fa346b4", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
     ],
   },
 
@@ -135,20 +135,20 @@ const LZ_PROTOCOL: Record<
     receiveUln302: "0x3c4962Ff6258dcfCafD23a814237B7d6Eb712063",
     executor: "0x2D2ea0697bdbede3F01553D2Ae4B8d0c486B666e",
     dvns: [
-      "0x76FaFF60799021B301B45dC1BbEDE53F261F9961", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
-      "0x0D875bD6c833cEDef7Fca4FE154d023cDB8eb1cb", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
+      "0x969a0bdd86a230345ad87a6a381de5ed9e6cda85", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
+      "0x6a02d83e8d433304bba74ef1c427913958187142", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
     ],
   },
   
 
   [ETHEREUM_CHAIN_ID]: {
-    endpoint: "0x1a44076050125825900e736c501f859c50fE728c",
+    endpoint: "0x58dff8622759ea75910a08dba5d060579271dcd7",
     sendUln302: "0xbB2Ea70C9E858123480642Cf96acbcCE1372dCe1",
     receiveUln302: "0xc02Ab410f0734EFa3F14628780e6e695156024C2",
     executor: "0x173272739Bd7Aa6e4e214714048a9fE699453059",
     dvns: [
       "0x76FaFF60799021B301B45dC1BbEDE53F261F9961", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
-      "0x0D875bD6c833cEDef7Fca4FE154d023cDB8eb1cb", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
+      "0x589dedbd617e0cbcb916a9223f4d1300c294236b", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
     ],
   },
   
@@ -156,11 +156,11 @@ const LZ_PROTOCOL: Record<
   [ARBITRUM_CHAIN_ID]: {
     endpoint: "0x1a44076050125825900e736c501f859c50fE728c",
     sendUln302: "0x975bcD720be66659e3EB3C0e4F1866a3020E493A",
-    receiveUln302: "0x0B6F08C2D39421Acb49c99abCe82050e356171e5",
+    receiveUln302: "0x7B9E184e07a6EE1aC23eAe0fe8D6Be2f663f05e6",
     executor: "0x31CAe3B7fB82d847621859fb1585353c5720660D",
     dvns: [
-      "0x76FaFF60799021B301B45dC1BbEDE53F261F9961", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
-      "0x0D875bD6c833cEDef7Fca4FE154d023cDB8eb1cb", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
+      "0x2f55C492897526677C5B68fb199ea31E2c126416", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
+      "0xd56e4eab23cb81f43168f9f45211eb027b9ac7cc", // ЧИТАЙ ОФ ДОКИ НЕ ЗАБУДЬ ПОМЕНЯТь
     ],
   },
   
@@ -2439,7 +2439,7 @@ const configurePathway = async (
   alert(`${label}\nConfirm in MetaMask...`);
   const hash = await client.writeContract({
     ...req,
-    gas: BigInt(2_000_000), // setSend/ReceiveLibrary и setConfig хватает
+    gas: BigInt(500_000), // setSend/ReceiveLibrary и setConfig хватает
   });
   await publicClient!.waitForTransactionReceipt({
     hash,
@@ -3383,10 +3383,16 @@ const sendToken = async () => {
 {/* 6. Configure DVN / Executor */}
 <div>
   <h2 className="text-2xl font-semibold mb-4 text-white">6. Configure DVN / Executor</h2>
-  <p className="text-sm text-yellow-400 mb-4">
-    Нужно на обеих сторонах пути. Без этого quoteSend падает с ошибкой DVNs/Executor.
+  <p className="text-sm text-yellow-400 mb-2">
+    Нужно на <strong>обеих</strong> сторонах пути. Без этого quoteSend падает с ошибкой DVNs/Executor.
   </p>
-  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+  <p className="text-sm text-gray-400 mb-4">
+    На Tempo газ = pathUSD. Если MetaMask «не удастся» — выключи Smart Transactions или сделай шаг через Hardhat.
+  </p>
+
+  <p className="text-sm text-white/70 mb-2 font-medium">Tempo ↔ другие сети</p>
+  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+    {/* Base */}
     <button
       onClick={() => configurePathway(BASE_CHAIN_ID, TEMPO_EID, baseAddress)}
       disabled={!baseAddress}
@@ -3401,7 +3407,70 @@ const sendToken = async () => {
     >
       Tempo → Base
     </button>
-    {/* добавь другие пары по тому же шаблону */}
+
+    {/* Ethereum */}
+    <button
+      onClick={() => configurePathway(ETHEREUM_CHAIN_ID, TEMPO_EID, ethAddress)}
+      disabled={!ethAddress}
+      className="bg-pink-600 hover:bg-pink-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold"
+    >
+      Ethereum → Tempo
+    </button>
+    <button
+      onClick={() => configurePathway(TEMPO_CHAIN_ID, ETHEREUM_EID, tempoAddress)}
+      disabled={!tempoAddress}
+      className="bg-pink-600 hover:bg-pink-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold"
+    >
+      Tempo → Ethereum
+    </button>
+
+    {/* Optimism */}
+    <button
+      onClick={() => configurePathway(OPTIMISM_CHAIN_ID, TEMPO_EID, opAddress)}
+      disabled={!opAddress}
+      className="bg-pink-600 hover:bg-pink-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold"
+    >
+      Optimism → Tempo
+    </button>
+    <button
+      onClick={() => configurePathway(TEMPO_CHAIN_ID, OPTIMISM_EID, tempoAddress)}
+      disabled={!tempoAddress}
+      className="bg-pink-600 hover:bg-pink-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold"
+    >
+      Tempo → Optimism
+    </button>
+
+    {/* Arbitrum */}
+    <button
+      onClick={() => configurePathway(ARBITRUM_CHAIN_ID, TEMPO_EID, arbAddress)}
+      disabled={!arbAddress}
+      className="bg-pink-600 hover:bg-pink-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold"
+    >
+      Arbitrum → Tempo
+    </button>
+    <button
+      onClick={() => configurePathway(TEMPO_CHAIN_ID, ARBITRUM_EID, tempoAddress)}
+      disabled={!tempoAddress}
+      className="bg-pink-600 hover:bg-pink-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold"
+    >
+      Tempo → Arbitrum
+    </button>
+
+    {/* ARC */}
+    <button
+      onClick={() => configurePathway(ARC_MAINNET_CHAIN_ID, TEMPO_EID, arcAddress)}
+      disabled={!arcAddress}
+      className="bg-pink-600 hover:bg-pink-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold"
+    >
+      ARC → Tempo
+    </button>
+    <button
+      onClick={() => configurePathway(TEMPO_CHAIN_ID, ARC_MAINNET_EID, tempoAddress)}
+      disabled={!tempoAddress}
+      className="bg-pink-600 hover:bg-pink-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold"
+    >
+      Tempo → ARC
+    </button>
   </div>
 </div>
             
