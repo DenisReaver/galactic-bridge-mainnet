@@ -2471,7 +2471,33 @@ const configurePathway = async (
       throw new Error("No DVNs in LZ_PROTOCOL for this chain");
     }
 
-  const executorConfig = encodeAbiParameters(
+const ulnConfig = encodeAbiParameters(
+  [
+    {
+      type: "tuple",
+      components: [
+        { name: "confirmations", type: "uint64" },
+        { name: "requiredDVNCount", type: "uint8" },
+        { name: "optionalDVNCount", type: "uint8" },
+        { name: "optionalDVNThreshold", type: "uint8" },
+        { name: "requiredDVNs", type: "address[]" },
+        { name: "optionalDVNs", type: "address[]" },
+      ],
+    },
+  ],
+  [
+    {
+      confirmations: BigInt(5),
+      requiredDVNCount: dvns.length,
+      optionalDVNCount: 0,
+      optionalDVNThreshold: 0,
+      requiredDVNs: dvns,
+      optionalDVNs: [],
+    },
+  ]
+);
+
+const executorConfig = encodeAbiParameters(
   [
     {
       type: "tuple",
