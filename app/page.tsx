@@ -1208,32 +1208,47 @@ const sendToken = async () => {
 
 
 
-  const configurePathway = async (
-  localChainId: number,
-  remoteEid: number,
-  oappAddress: string
-) => {
+const sendToken = async () => {
   if (!address) return alert("Connect wallet");
-  if (!oappAddress) return alert("OApp address missing");
+  if (!recipient || !sendAmount) return alert("Enter recipient and amount");
 
-  const proto = LZ_PROTOCOL[localChainId];
-  if (!proto) return alert("Protocol addresses not set for this chain");
+  // --- resolve source ---
+  let srcAddress = "";
+  let srcChainId = 0;
+  let dstEid = 0;
 
-  if (
-    !proto.sendUln302 ||
-    proto.sendUln302 === "0x0000000000000000000000000000000000000000" ||
-    !proto.dvns ||
-    proto.dvns.length === 0 ||
-    proto.dvns.some((d) => !d || d === "0x0000000000000000000000000000000000000000")
-  ) {
-    return alert(
-      "Заполни реальные адреса SendUln302 / ReceiveUln302 / Executor / DVNs для этой сети"
-    );
+  if (fromNetwork === "eth") {
+    srcAddress = ethAddress;
+    srcChainId = ETHEREUM_CHAIN_ID;
+  } else if (fromNetwork === "base") {
+    srcAddress = baseAddress;
+    srcChainId = BASE_CHAIN_ID;
+  } else if (fromNetwork === "op") {
+    srcAddress = opAddress;
+    srcChainId = OPTIMISM_CHAIN_ID;
+  } else if (fromNetwork === "arb") {
+    srcAddress = arbAddress;
+    srcChainId = ARBITRUM_CHAIN_ID;
+  } else if (fromNetwork === "arc") {
+    srcAddress = arcAddress;
+    srcChainId = ARC_MAINNET_CHAIN_ID;
+  } else if (fromNetwork === "tempo") {
+    srcAddress = tempoAddress;
+    srcChainId = TEMPO_CHAIN_ID;
   }
 
-  if (chain?.id !== localChainId) {
-    await switchChain({ chainId: localChainId });
-    alert(`Switched to ${getNetworkName(localChainId)}. Click again.`);
+  if (toNetwork === "eth") dstEid = ETHEREUM_EID;
+  else if (toNetwork === "base") dstEid = BASE_EID;
+  else if (toNetwork === "op") dstEid = OPTIMISM_EID;
+  else if (toNetwork === "arb") dstEid = ARBITRUM_EID;
+  else if (toNetwork === "arc") dstEid = ARC_MAINNET_EID;
+  else if (toNetwork === "tempo") dstEid = TEMPO_EID;
+
+  if (!srcAddress || !dstEid) return alert("Deploy tokens / choose networks first");
+
+  if (chain?.id !== srcChainId) {
+    await switchChain({ chainId: srcChainId });
+    alert(`Switched to ${getNetworkName(srcChainId)}. Click Send again.`);
     return;
   }
 
@@ -1244,94 +1259,95 @@ const sendToken = async () => {
       account: address,
     });
 
-    const oapp = oappAddress as `0x${string}`;
-
-    const sendAndWait = async (label: string, req: any) => {
-      alert(`${label}\nConfirm in MetaMask...`);
-      const hash = await client.writeContract(req);
-      await publicClient!.waitForTransactionReceipt({
-        hash,
-        timeout: 300_000,
-        pollingInterval: 5_000,
-      });
-      return hash;
+    const amountLD = parseUnits(sendAmount, 18);
+    const sendParam = {
+      dstEid,
+      to: `0x000000000000000000000000${recipient.slice(2)}` as `0x${string}`,
+      amountLD,
+      minAmountLD: (amountLD * BigInt(950)) / BigInt(1000),
+      extraOptions: "0x" as `0x${string}`,
+      composeMsg: "0x" as `0x${string}`,
+      oftCmd: "0x" as `0x${string}`,
     };
 
-    // 1) Send library
-    await sendAndWait("1/4 setSendLibrary", {
-      address: proto.endpoint,
-      abi: ENDPOINT_ABI,
-      functionName: "setSendLibrary",
-      args: [oapp, remoteEid, proto.sendUln302],
+    // quote
+    const quote = await publicClient!.readContract({
+      address: srcAddress as `0x${string}`,
+      abi: OFT_ABI,
+      functionName: "quoteSend",
+      args: [sendParam, false],
     });
 
-    // 2) Receive library
-    await sendAndWait("2/4 setReceiveLibrary", {
-      address: proto.endpoint,
-      abi: ENDPOINT_ABI,
-      functionName: "setReceiveLibrary",
-      args: [oapp, remoteEid, proto.receiveUln302, BigInt(0)],
-    });
+    const nativeFee = Array.isArray(quote)
+      ? BigInt((quote as any)[0]?.nativeFee ?? quote[0] ?? 0)
+      : BigInt((quote as any)?.nativeFee ?? 0);
 
-    // Encode configs — 2 DVN
-    const dvns = [...(proto.dvns || [])].sort((a, b) =>
-      a.toLowerCase().localeCompare(b.toLowerCase())
-    ) as `0x${string}`[];
-
-    if (dvns.length < 1) {
-      throw new Error("No DVNs in LZ_PROTOCOL for this chain");
+    if (nativeFee === BigInt(0)) {
+      throw new Error("nativeFee = 0. Check Set Peer, DVN config & Enforced Options.");
     }
 
-    const ulnConfig = encodeAbiParameters(
-      parseAbiParameters("uint64, uint8, uint8, uint8, address[], address[]"),
-      [
-        BigInt(5),
-        dvns.length,
-        0,
-        0,
-        dvns,
-        [],
-      ]
-    );
+    // ========== TEMPO: fee in LZD ==========
+    if (srcChainId === TEMPO_CHAIN_ID) {
+      const feeWithBuffer = (nativeFee * BigInt(110)) / BigInt(100);
 
-    const executorConfig = encodeAbiParameters(
-      parseAbiParameters("uint32, address"),
-      [10000, proto.executor]
-    );
+      // 1) approve pathUSD → LZD
+      alert("1/4 Approve pathUSD for LZD wrap...");
+      let hash = await client.writeContract({
+        address: PATH_USD,
+        abi: ERC20_ABI,
+        functionName: "approve",
+        args: [LZD_ADDRESS, feeWithBuffer],
+      });
+      await publicClient!.waitForTransactionReceipt({ hash, timeout: 300_000 });
 
-    // 3) Send config
-    await sendAndWait("3/4 setConfig SEND (Executor+2 DVN)", {
-      address: proto.endpoint,
-      abi: ENDPOINT_ABI,
-      functionName: "setConfig",
-      args: [
-        oapp,
-        proto.sendUln302,
-        [
-          { eid: remoteEid, configType: CONFIG_TYPE_EXECUTOR, config: executorConfig },
-          { eid: remoteEid, configType: CONFIG_TYPE_ULN, config: ulnConfig },
-        ],
-      ],
+      // 2) wrap pathUSD → LZD
+      alert("2/4 Wrap pathUSD → LZD...");
+      hash = await client.writeContract({
+        address: LZD_ADDRESS,
+        abi: LZD_ABI,
+        functionName: "wrap",
+        args: [PATH_USD, address, feeWithBuffer],
+      });
+      await publicClient!.waitForTransactionReceipt({ hash, timeout: 300_000 });
+
+      // 3) approve LZD → OFT
+      alert("3/4 Approve LZD for OFT fee...");
+      hash = await client.writeContract({
+        address: LZD_ADDRESS,
+        abi: ERC20_ABI,
+        functionName: "approve",
+        args: [srcAddress as `0x${string}`, nativeFee],
+      });
+      await publicClient!.waitForTransactionReceipt({ hash, timeout: 300_000 });
+
+      // 4) send value=0
+      alert("4/4 Send via LayerZero...");
+      hash = await client.writeContract({
+        address: srcAddress as `0x${string}`,
+        abi: OFT_ABI,
+        functionName: "send",
+        args: [sendParam, { nativeFee, lzTokenFee: BigInt(0) }, address],
+        value: BigInt(0),
+      });
+      setLastTxHash?.(hash);
+      alert(`✅ Sent from Tempo!\nHash: ${hash}\nhttps://layerzeroscan.com/tx/${hash}`);
+      return;
+    }
+
+    // ========== NORMAL EVM: pay nativeFee in ETH ==========
+    const hash = await client.writeContract({
+      address: srcAddress as `0x${string}`,
+      abi: OFT_ABI,
+      functionName: "send",
+      args: [sendParam, { nativeFee, lzTokenFee: BigInt(0) }, address],
+      value: nativeFee,
     });
 
-    // 4) Receive config
-    await sendAndWait("4/4 setConfig RECEIVE (2 DVN)", {
-      address: proto.endpoint,
-      abi: ENDPOINT_ABI,
-      functionName: "setConfig",
-      args: [
-        oapp,
-        proto.receiveUln302,
-        [{ eid: remoteEid, configType: CONFIG_TYPE_ULN, config: ulnConfig }],
-      ],
-    });
-
-    alert(
-      `✅ Done on ${getNetworkName(localChainId)} for remote EID ${remoteEid}\n\nТеперь то же самое на ДРУГОЙ сети пути.`
-    );
+    setLastTxHash?.(hash);
+    alert(`✅ Transaction sent!\nHash: ${hash}\nhttps://layerzeroscan.com/tx/${hash}`);
   } catch (error: any) {
     console.error(error);
-    alert(`Config error: ${error?.shortMessage || error?.message || error}`);
+    alert(`Send failed: ${error?.shortMessage || error?.message || error}`);
   }
 };
 
