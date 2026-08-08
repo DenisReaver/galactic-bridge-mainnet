@@ -635,8 +635,38 @@ const OFT_ABI = [
 ] as const;
 // ============================================================
 
+const LZD_ABI = [
+  {
+    type: "function",
+    name: "approve",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "spender", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ type: "bool" }],
+  },
+  {
+    type: "function",
+    name: "balanceOf",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "wrap",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "token", type: "address" },
+      { name: "to", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [],
+  },
+] as const;
 
-/*const ERC20_ABI = [
+const ERC20_ABI = [
     {
       "inputs": [
         {
@@ -2295,7 +2325,7 @@ const OFT_ABI = [
       "stateMutability": "nonpayable",
       "type": "function"
     }
-  ] as const;*/
+  ] as const;
 
 export default function GalacticBridge() {
   const { address, chain } = useAccount();
