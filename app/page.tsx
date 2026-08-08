@@ -2435,16 +2435,19 @@ const configurePathway = async (
 
     const oapp = oappAddress as `0x${string}`;
 
-    const sendAndWait = async (label: string, req: any) => {
-      alert(`${label}\nConfirm in MetaMask...`);
-      const hash = await client.writeContract(req);
-      await publicClient!.waitForTransactionReceipt({
-        hash,
-        timeout: 300_000,
-        pollingInterval: 5_000,
-      });
-      return hash;
-    };
+ const sendAndWait = async (label: string, req: any) => {
+  alert(`${label}\nConfirm in MetaMask...`);
+  const hash = await client.writeContract({
+    ...req,
+    gas: BigInt(500_000), // setSend/ReceiveLibrary и setConfig хватает
+  });
+  await publicClient!.waitForTransactionReceipt({
+    hash,
+    timeout: 300_000,
+    pollingInterval: 5_000,
+  });
+  return hash;
+};
 
     // 1) Send library
     await sendAndWait("1/4 setSendLibrary", {
