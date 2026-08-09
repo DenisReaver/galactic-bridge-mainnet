@@ -46,7 +46,7 @@ export const config = getDefaultConfig({
     [mainnet.id]: http('https://ethereum.publicnode.com'),
     [base.id]: http('https://mainnet.base.org'),
     [optimism.id]: http('https://mainnet.optimism.io'),
-    [arbitrum.id]: http('https://arb1.arbitrum.io/rpc'),
+    [arbitrum.id]: http('https://arbitrum.drpc.org'),
     [arcMainnet.id]: http('https://rpc-main-1.archiechain.io'),
     [tempoMainnet.id]: http('https://rpc.mainnet.tempo.xyz'),
   },
