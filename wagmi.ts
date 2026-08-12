@@ -43,7 +43,7 @@ export const config = getDefaultConfig({
   projectId: '6cd43074381dca42cc0f029143e150c8',
   chains: [mainnet, base, optimism, arbitrum, arcMainnet, tempoMainnet],
   transports: {
-    [mainnet.id]: http('https://rpc.mevblocker.io'),
+    [mainnet.id]: http('https://0xrpc.io/eth'),
     [base.id]: http('https://mainnet.base.org'),
     [optimism.id]: http('https://mainnet.optimism.io'),
     [arbitrum.id]: http('https://arbitrum.drpc.org'),
