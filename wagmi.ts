@@ -62,7 +62,7 @@ export const config = getDefaultConfig({
   chains: [mainnet, base, optimism, arbitrum, arcMainnet, tempoMainnet, robinhoodMainnet],
   transports: {
     [mainnet.id]: http('https://0xrpc.io/eth'),
-    [base.id]: http('https://mainnet.base.org'),
+    [base.id]: http('https://base-rpc.publicnode.com'),
     [optimism.id]: http('https://mainnet.optimism.io'),
     [arbitrum.id]: http('https://arbitrum.drpc.org'),
     [arcMainnet.id]: http('https://rpc-main-1.archiechain.io'),
