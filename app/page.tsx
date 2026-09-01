@@ -13,6 +13,7 @@ const OPTIMISM_CHAIN_ID = 10;
 const ARBITRUM_CHAIN_ID = 42161;
 const ARC_MAINNET_CHAIN_ID = 5042;
 const TEMPO_CHAIN_ID = 4217;
+const ROBINHOOD_CHAIN_ID = 4663;
 
 // ==================== LAYERZERO EIDs ====================
 const ETHEREUM_EID = 30101;
@@ -21,6 +22,7 @@ const OPTIMISM_EID = 30111;
 const ARBITRUM_EID = 30110;
 const ARC_MAINNET_EID = 30417; // уточни по docs, если ARC ещё не юзаешь
 const TEMPO_EID = 30410;
+const ROBINHOOD_EID = 30416;
 
 const CREATOR_ADDRESS = "0xD5635DaE1b8D3f4484eeE01225eD641f367cE40a" as const;
 
@@ -172,6 +174,17 @@ const LZ_PROTOCOL: Record<
     dvns: [
       "0x76FaFF60799021B301B45dC1BbEDE53F261F9961", // LayerZero Labs
       "0x0D875bD6c833cEDef7Fca4FE154d023cDB8eb1cb", // Nethermind
+    ],
+  },
+  
+    [ROBINHOOD_CHAIN_ID]: {
+    endpoint: "0x6F475642a6e85809B1c36Fa62763669b1b48DD5B",
+    sendUln302: "0xC39161c743D0307EB9BCc9FEF03eeb9Dc4802de7",
+    receiveUln302: "0xe1844c5D63a9543023008D332Bd3d2e6f1FE1043",
+    executor: "0x4208D6E27538189bB48E603D6123A94b8Abe0A0b",
+    dvns: [
+      "0xd01ae6905d48315f7be10c7330aecf8360ef5b12", // LayerZero Labs
+      "0x0ffe02df012299a370d5dd69298a5826eacafdf8", // Nethermind
     ],
   },
   // ETH / OP / Arb / ARC — добавим позже по тому же шаблону
@@ -2356,37 +2369,41 @@ export default function GalacticBridge() {
 
   const [lastTxHash, setLastTxHash] = useState("");
   const [tempoAddress, setTempoAddress] = useState(""); 
+  const [robinhoodAddress, setRobinhoodAddress] = useState("");
 
-  useEffect(() => {
-    setEthAddress(localStorage.getItem("morgen_ethereum") || "");
-    setBaseAddress(localStorage.getItem("morgen_base") || "");
-    setOpAddress(localStorage.getItem("morgen_optimism") || "");
-    setArbAddress(localStorage.getItem("morgen_arbitrum") || "");
-    setArcAddress(localStorage.getItem("morgen_arc_mainnet") || "");
-    setTempoAddress(localStorage.getItem("morgen_tempo") || "");
-    if (address) setRecipient(address);
-  }, [address]);
+useEffect(() => {
+  setEthAddress(localStorage.getItem("morgen_ethereum") || "");
+  setBaseAddress(localStorage.getItem("morgen_base") || "");
+  setOpAddress(localStorage.getItem("morgen_optimism") || "");
+  setArbAddress(localStorage.getItem("morgen_arbitrum") || "");
+  setArcAddress(localStorage.getItem("morgen_arc_mainnet") || "");
+  setTempoAddress(localStorage.getItem("morgen_tempo") || "");
+  setRobinhoodAddress(localStorage.getItem("morgen_robinhood") || "");  // ← NEW
+  if (address) setRecipient(address);
+}, [address]);
 
-  const saveAddress = (chainId: number, contractAddress: string) => {
-    const key = `morgen_${getNetworkName(chainId).toLowerCase().replace(/\s+/g, '_')}`;
-    localStorage.setItem(key, contractAddress);
+const saveAddress = (chainId: number, contractAddress: string) => {
+  const key = `morgen_${getNetworkName(chainId).toLowerCase().replace(/\s+/g, '_')}`;
+  localStorage.setItem(key, contractAddress);
 
-    if (chainId === ETHEREUM_CHAIN_ID) setEthAddress(contractAddress);
-    else if (chainId === BASE_CHAIN_ID) setBaseAddress(contractAddress);
-    else if (chainId === OPTIMISM_CHAIN_ID) setOpAddress(contractAddress);
-    else if (chainId === ARBITRUM_CHAIN_ID) setArbAddress(contractAddress);
-    else if (chainId === ARC_MAINNET_CHAIN_ID) setArcAddress(contractAddress);
-    else if (chainId === TEMPO_CHAIN_ID) setTempoAddress(contractAddress);
-  };
+  if (chainId === ETHEREUM_CHAIN_ID) setEthAddress(contractAddress);
+  else if (chainId === BASE_CHAIN_ID) setBaseAddress(contractAddress);
+  else if (chainId === OPTIMISM_CHAIN_ID) setOpAddress(contractAddress);
+  else if (chainId === ARBITRUM_CHAIN_ID) setArbAddress(contractAddress);
+  else if (chainId === ARC_MAINNET_CHAIN_ID) setArcAddress(contractAddress);
+  else if (chainId === TEMPO_CHAIN_ID) setTempoAddress(contractAddress);
+  else if (chainId === ROBINHOOD_CHAIN_ID) setRobinhoodAddress(contractAddress); // ← NEW
+};
 
-  const getNetworkName = (chainId: number) => {
-    if (chainId === ARC_MAINNET_CHAIN_ID) return "ARC Mainnet";
-    if (chainId === ETHEREUM_CHAIN_ID) return "Ethereum";
-    if (chainId === BASE_CHAIN_ID) return "Base";
-    if (chainId === OPTIMISM_CHAIN_ID) return "Optimism";
-    if (chainId === TEMPO_CHAIN_ID) return "Tempo";
-    return "Arbitrum";
-  };
+const getNetworkName = (chainId: number) => {
+  if (chainId === ARC_MAINNET_CHAIN_ID) return "ARC Mainnet";
+  if (chainId === ETHEREUM_CHAIN_ID) return "Ethereum";
+  if (chainId === BASE_CHAIN_ID) return "Base";
+  if (chainId === OPTIMISM_CHAIN_ID) return "Optimism";
+  if (chainId === TEMPO_CHAIN_ID) return "Tempo";
+  if (chainId === ROBINHOOD_CHAIN_ID) return "Robinhood"; // ← NEW
+  return "Arbitrum";
+};
 
   const resetAll = () => {
     if (!confirm("Reset everything?")) return;
@@ -2632,6 +2649,7 @@ const mint = async (targetChainId: number) => {
     targetChainId === ARBITRUM_CHAIN_ID ? arbAddress :
     targetChainId === ARC_MAINNET_CHAIN_ID ? arcAddress :
     targetChainId === TEMPO_CHAIN_ID ? tempoAddress :
+    targetChainId === ROBINHOOD_CHAIN_ID ? robinhoodAddress :
     "";
 
   if (!targetAddr) return alert("Deploy first");
@@ -2661,7 +2679,6 @@ const mint = async (targetChainId: number) => {
     alert(`Mint error: ${error?.shortMessage || error?.message || error}`);
   }
 };
-
   // ==================== LOAD OLD TOKEN ====================
   const loadOldToken = async () => {
     const input = document.getElementById('oldContractInput') as HTMLInputElement;
@@ -2724,6 +2741,7 @@ const setPeer = async (fromChainId: number, toEid: number, toAddress: string) =>
     fromChainId === ARBITRUM_CHAIN_ID ? arbAddress :
     fromChainId === ARC_MAINNET_CHAIN_ID ? arcAddress :
     fromChainId === TEMPO_CHAIN_ID ? tempoAddress :
+    fromChainId === ROBINHOOD_CHAIN_ID ? robinhoodAddress :
     "";
 
   if (!srcAddress) return alert("Source token not found");
@@ -2763,6 +2781,7 @@ const setEnforcedOptions = async (targetChainId: number) => {
     targetChainId === ARBITRUM_CHAIN_ID ? arbAddress :
     targetChainId === ARC_MAINNET_CHAIN_ID ? arcAddress :
     targetChainId === TEMPO_CHAIN_ID ? tempoAddress :
+    targetChainId === ROBINHOOD_CHAIN_ID ? robinhoodAddress :
     "";
 
   if (!targetAddr) return alert("Deploy token on this network first");
@@ -2799,9 +2818,7 @@ const setEnforcedOptions = async (targetChainId: number) => {
     if (targetChainId !== ARBITRUM_CHAIN_ID) pushIf(arbAddress, ARBITRUM_EID, false);
     if (targetChainId !== ARC_MAINNET_CHAIN_ID) pushIf(arcAddress, ARC_MAINNET_EID, false);
     if (targetChainId !== TEMPO_CHAIN_ID) pushIf(tempoAddress, TEMPO_EID, true); // → Tempo = 2M gas
-
-    // если на Tempo — все remote с обычным gas (Base и т.д.)
-    // (isTempoDest уже false для них)
+    if (targetChainId !== ROBINHOOD_CHAIN_ID) pushIf(robinhoodAddress, ROBINHOOD_EID, false);
 
     if (entries.length === 0) {
       return alert("Deploy at least one remote token first");
@@ -3002,6 +3019,9 @@ const sendToken = async () => {
   } else if (fromNetwork === "tempo") {
     srcAddress = tempoAddress;
     srcChainId = TEMPO_CHAIN_ID;
+  } else if (fromNetwork === "robinhood") {
+    srcAddress = robinhoodAddress;
+    srcChainId = ROBINHOOD_CHAIN_ID;
   }
 
   if (toNetwork === "eth") dstEid = ETHEREUM_EID;
@@ -3010,6 +3030,7 @@ const sendToken = async () => {
   else if (toNetwork === "arb") dstEid = ARBITRUM_EID;
   else if (toNetwork === "arc") dstEid = ARC_MAINNET_EID;
   else if (toNetwork === "tempo") dstEid = TEMPO_EID;
+  else if (toNetwork === "robinhood") dstEid = ROBINHOOD_EID;
 
   if (!srcAddress || !dstEid) return alert("Deploy tokens / choose networks first");
 
@@ -3153,13 +3174,14 @@ const sendToken = async () => {
 {/* 1. Deploy */}
 <div>
   <h2 className="text-2xl font-semibold mb-4 text-white">1. Deploy Token</h2>
-  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
     <button onClick={() => deploy(ETHEREUM_CHAIN_ID)} className="bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-semibold">Ethereum</button>
     <button onClick={() => deploy(BASE_CHAIN_ID)} className="bg-rose-600 hover:bg-rose-700 py-4 rounded-2xl font-semibold">Base</button>
     <button onClick={() => deploy(OPTIMISM_CHAIN_ID)} className="bg-orange-600 hover:bg-orange-700 py-4 rounded-2xl font-semibold">Optimism</button>
     <button onClick={() => deploy(ARBITRUM_CHAIN_ID)} className="bg-cyan-600 hover:bg-cyan-700 py-4 rounded-2xl font-semibold">Arbitrum</button>
     <button onClick={() => deploy(ARC_MAINNET_CHAIN_ID)} className="bg-purple-600 hover:bg-purple-700 py-4 rounded-2xl font-semibold">ARC Mainnet</button>
     <button onClick={() => deploy(TEMPO_CHAIN_ID)} className="bg-indigo-600 hover:bg-indigo-700 py-4 rounded-2xl font-semibold">Tempo</button>
+    <button onClick={() => deploy(ROBINHOOD_CHAIN_ID)} className="bg-green-700 hover:bg-green-800 py-4 rounded-2xl font-semibold">Robinhood</button>
   </div>
 </div>
 
@@ -3201,6 +3223,10 @@ const sendToken = async () => {
       className="flex-1 bg-black/40 border border-white/20 rounded-xl px-3 py-2 font-mono text-emerald-400 text-sm outline-none focus:border-indigo-500"
     />
   </div>
+  <div className="flex items-center gap-3">
+    <span className="font-semibold text-white w-28">Robinhood:</span>
+    <span className="font-mono text-emerald-400 break-all flex-1">{robinhoodAddress || "—"}</span>
+  </div>
 </div>
 
 {/* 2. Mint */}
@@ -3223,6 +3249,7 @@ const sendToken = async () => {
     <button onClick={() => mint(ARBITRUM_CHAIN_ID)} disabled={!arbAddress} className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Mint Arbitrum</button>
     <button onClick={() => mint(ARC_MAINNET_CHAIN_ID)} disabled={!arcAddress} className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Mint ARC</button>
     <button onClick={() => mint(TEMPO_CHAIN_ID)} disabled={!tempoAddress} className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Mint Tempo</button>
+    <button onClick={() => mint(ROBINHOOD_CHAIN_ID)} disabled={!robinhoodAddress} className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Mint Robinhood</button>
   </div>
 </div>
 
@@ -3243,6 +3270,7 @@ const sendToken = async () => {
         <option value="arb">Arbitrum</option>
         <option value="arc">ARC Mainnet</option>
         <option value="tempo">Tempo</option>
+        <option value="robinhood">Robinhood</option>
       </select>
     </div>
     <div>
@@ -3258,6 +3286,7 @@ const sendToken = async () => {
         <option value="arb">Arbitrum</option>
         <option value="arc">ARC Mainnet</option>
         <option value="tempo">Tempo</option>
+        <option value="robinhood">Robinhood</option>
       </select>
     </div>
     <div>
@@ -3308,6 +3337,7 @@ const sendToken = async () => {
     <button onClick={() => setPeer(OPTIMISM_CHAIN_ID, TEMPO_EID, tempoAddress)} disabled={!opAddress || !tempoAddress} className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Optimism → Tempo</button>
     <button onClick={() => setPeer(ARBITRUM_CHAIN_ID, TEMPO_EID, tempoAddress)} disabled={!arbAddress || !tempoAddress} className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Arbitrum → Tempo</button>
     <button onClick={() => setPeer(ARC_MAINNET_CHAIN_ID, TEMPO_EID, tempoAddress)} disabled={!arcAddress || !tempoAddress} className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">ARC → Tempo</button>
+    <button onClick={() => setPeer(ROBINHOOD_CHAIN_ID, TEMPO_EID, tempoAddress)} disabled={!robinhoodAddress || !tempoAddress} className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Robinhood → Tempo</button>
 
     {/* Tempo → */}
     <button onClick={() => setPeer(TEMPO_CHAIN_ID, ETHEREUM_EID, ethAddress)} disabled={!tempoAddress || !ethAddress} className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Tempo → Ethereum</button>
@@ -3315,6 +3345,21 @@ const sendToken = async () => {
     <button onClick={() => setPeer(TEMPO_CHAIN_ID, OPTIMISM_EID, opAddress)} disabled={!tempoAddress || !opAddress} className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Tempo → Optimism</button>
     <button onClick={() => setPeer(TEMPO_CHAIN_ID, ARBITRUM_EID, arbAddress)} disabled={!tempoAddress || !arbAddress} className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Tempo → Arbitrum</button>
     <button onClick={() => setPeer(TEMPO_CHAIN_ID, ARC_MAINNET_EID, arcAddress)} disabled={!tempoAddress || !arcAddress} className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Tempo → ARC</button>
+    <button onClick={() => setPeer(TEMPO_CHAIN_ID, ROBINHOOD_EID, robinhoodAddress)} disabled={!tempoAddress || !robinhoodAddress} className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Tempo → Robinhood</button>
+
+    {/* → Robinhood */}
+    <button onClick={() => setPeer(ETHEREUM_CHAIN_ID, ROBINHOOD_EID, robinhoodAddress)} disabled={!ethAddress || !robinhoodAddress} className="bg-green-700 hover:bg-green-800 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Ethereum → Robinhood</button>
+    <button onClick={() => setPeer(BASE_CHAIN_ID, ROBINHOOD_EID, robinhoodAddress)} disabled={!baseAddress || !robinhoodAddress} className="bg-green-700 hover:bg-green-800 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Base → Robinhood</button>
+    <button onClick={() => setPeer(OPTIMISM_CHAIN_ID, ROBINHOOD_EID, robinhoodAddress)} disabled={!opAddress || !robinhoodAddress} className="bg-green-700 hover:bg-green-800 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Optimism → Robinhood</button>
+    <button onClick={() => setPeer(ARBITRUM_CHAIN_ID, ROBINHOOD_EID, robinhoodAddress)} disabled={!arbAddress || !robinhoodAddress} className="bg-green-700 hover:bg-green-800 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Arbitrum → Robinhood</button>
+    <button onClick={() => setPeer(ARC_MAINNET_CHAIN_ID, ROBINHOOD_EID, robinhoodAddress)} disabled={!arcAddress || !robinhoodAddress} className="bg-green-700 hover:bg-green-800 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">ARC → Robinhood</button>
+
+    {/* Robinhood → */}
+    <button onClick={() => setPeer(ROBINHOOD_CHAIN_ID, ETHEREUM_EID, ethAddress)} disabled={!robinhoodAddress || !ethAddress} className="bg-green-700 hover:bg-green-800 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Robinhood → Ethereum</button>
+    <button onClick={() => setPeer(ROBINHOOD_CHAIN_ID, BASE_EID, baseAddress)} disabled={!robinhoodAddress || !baseAddress} className="bg-green-700 hover:bg-green-800 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Robinhood → Base</button>
+    <button onClick={() => setPeer(ROBINHOOD_CHAIN_ID, OPTIMISM_EID, opAddress)} disabled={!robinhoodAddress || !opAddress} className="bg-green-700 hover:bg-green-800 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Robinhood → Optimism</button>
+    <button onClick={() => setPeer(ROBINHOOD_CHAIN_ID, ARBITRUM_EID, arbAddress)} disabled={!robinhoodAddress || !arbAddress} className="bg-green-700 hover:bg-green-800 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Robinhood → Arbitrum</button>
+    <button onClick={() => setPeer(ROBINHOOD_CHAIN_ID, ARC_MAINNET_EID, arcAddress)} disabled={!robinhoodAddress || !arcAddress} className="bg-green-700 hover:bg-green-800 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Robinhood → ARC</button>
 
     {/* ARC */}
     <button onClick={() => setPeer(ARC_MAINNET_CHAIN_ID, ETHEREUM_EID, ethAddress)} disabled={!arcAddress || !ethAddress} className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">ARC → Ethereum</button>
@@ -3351,13 +3396,14 @@ const sendToken = async () => {
 {/* 5. Enforced Options */}
 <div>
   <h2 className="text-2xl font-semibold mb-4 text-white">5. Enforced Options</h2>
-  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
     <button onClick={() => setEnforcedOptions(ETHEREUM_CHAIN_ID)} disabled={!ethAddress} className="bg-amber-600 hover:bg-amber-700 disabled:bg-gray-700 py-4 rounded-2xl">Ethereum</button>
     <button onClick={() => setEnforcedOptions(BASE_CHAIN_ID)} disabled={!baseAddress} className="bg-amber-600 hover:bg-amber-700 disabled:bg-gray-700 py-4 rounded-2xl">Base</button>
     <button onClick={() => setEnforcedOptions(OPTIMISM_CHAIN_ID)} disabled={!opAddress} className="bg-amber-600 hover:bg-amber-700 disabled:bg-gray-700 py-4 rounded-2xl">Optimism</button>
     <button onClick={() => setEnforcedOptions(ARBITRUM_CHAIN_ID)} disabled={!arbAddress} className="bg-amber-600 hover:bg-amber-700 disabled:bg-gray-700 py-4 rounded-2xl">Arbitrum</button>
     <button onClick={() => setEnforcedOptions(ARC_MAINNET_CHAIN_ID)} disabled={!arcAddress} className="bg-amber-600 hover:bg-amber-700 disabled:bg-gray-700 py-4 rounded-2xl">ARC Mainnet</button>
     <button onClick={() => setEnforcedOptions(TEMPO_CHAIN_ID)} disabled={!tempoAddress} className="bg-amber-600 hover:bg-amber-700 disabled:bg-gray-700 py-4 rounded-2xl">Tempo</button>
+    <button onClick={() => setEnforcedOptions(ROBINHOOD_CHAIN_ID)} disabled={!robinhoodAddress} className="bg-amber-600 hover:bg-amber-700 disabled:bg-gray-700 py-4 rounded-2xl">Robinhood</button>
   </div>
 </div>
 
@@ -3471,6 +3517,40 @@ const sendToken = async () => {
     >
       Tempo → ARC
     </button>
+
+    {/* Robinhood ↔ Tempo */}
+    <button
+      onClick={() => configurePathway(ROBINHOOD_CHAIN_ID, TEMPO_EID, robinhoodAddress)}
+      disabled={!robinhoodAddress}
+      className="bg-pink-600 hover:bg-pink-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold"
+    >
+      Robinhood → Tempo
+    </button>
+    <button
+      onClick={() => configurePathway(TEMPO_CHAIN_ID, ROBINHOOD_EID, tempoAddress)}
+      disabled={!tempoAddress}
+      className="bg-pink-600 hover:bg-pink-700 disabled:bg-gray-700 py-4 rounded-2xl font-semibold"
+    >
+      Tempo → Robinhood
+    </button>
+  </div>
+
+  <p className="text-sm text-white/70 mb-2 font-medium mt-6">Robinhood ↔ other networks</p>
+  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+    <button onClick={() => configurePathway(ETHEREUM_CHAIN_ID, ROBINHOOD_EID, ethAddress)} disabled={!ethAddress} className="bg-green-700 hover:bg-green-800 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Ethereum → Robinhood</button>
+    <button onClick={() => configurePathway(ROBINHOOD_CHAIN_ID, ETHEREUM_EID, robinhoodAddress)} disabled={!robinhoodAddress} className="bg-green-700 hover:bg-green-800 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Robinhood → Ethereum</button>
+
+    <button onClick={() => configurePathway(BASE_CHAIN_ID, ROBINHOOD_EID, baseAddress)} disabled={!baseAddress} className="bg-green-700 hover:bg-green-800 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Base → Robinhood</button>
+    <button onClick={() => configurePathway(ROBINHOOD_CHAIN_ID, BASE_EID, robinhoodAddress)} disabled={!robinhoodAddress} className="bg-green-700 hover:bg-green-800 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Robinhood → Base</button>
+
+    <button onClick={() => configurePathway(OPTIMISM_CHAIN_ID, ROBINHOOD_EID, opAddress)} disabled={!opAddress} className="bg-green-700 hover:bg-green-800 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Optimism → Robinhood</button>
+    <button onClick={() => configurePathway(ROBINHOOD_CHAIN_ID, OPTIMISM_EID, robinhoodAddress)} disabled={!robinhoodAddress} className="bg-green-700 hover:bg-green-800 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Robinhood → Optimism</button>
+
+    <button onClick={() => configurePathway(ARBITRUM_CHAIN_ID, ROBINHOOD_EID, arbAddress)} disabled={!arbAddress} className="bg-green-700 hover:bg-green-800 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Arbitrum → Robinhood</button>
+    <button onClick={() => configurePathway(ROBINHOOD_CHAIN_ID, ARBITRUM_EID, robinhoodAddress)} disabled={!robinhoodAddress} className="bg-green-700 hover:bg-green-800 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Robinhood → Arbitrum</button>
+
+    <button onClick={() => configurePathway(ARC_MAINNET_CHAIN_ID, ROBINHOOD_EID, arcAddress)} disabled={!arcAddress} className="bg-green-700 hover:bg-green-800 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">ARC → Robinhood</button>
+    <button onClick={() => configurePathway(ROBINHOOD_CHAIN_ID, ARC_MAINNET_EID, robinhoodAddress)} disabled={!robinhoodAddress} className="bg-green-700 hover:bg-green-800 disabled:bg-gray-700 py-4 rounded-2xl font-semibold">Robinhood → ARC</button>
   </div>
 </div>
             
