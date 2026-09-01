@@ -3390,7 +3390,7 @@ const sendToken = async () => {
     For Tempo, gas = pathUSD. If MetaMask fails, disable Smart Transactions or use Hardhat.
   </p>
 
-  <p className="text-sm text-white/70 mb-2 font-medium">Tempo ↔ другие сети</p>
+  <p className="text-sm text-white/70 mb-2 font-medium">Tempo ↔ other networks</p>
   <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
     {/* Base */}
     <button
