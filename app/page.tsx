@@ -2582,7 +2582,20 @@ const deploy = async (targetChainId: number) => {
   }
 
   const isTempo = targetChainId === TEMPO_CHAIN_ID;
-  const endpoint = isTempo ? LZ_ENDPOINT_TEMPO : LZ_ENDPOINT;
+  
+  // Правильный endpoint для каждой сети
+  let endpoint: `0x${string}`;
+  if (isTempo) {
+    endpoint = LZ_ENDPOINT_TEMPO;
+  } else if (
+    targetChainId === ARC_MAINNET_CHAIN_ID ||
+    targetChainId === ROBINHOOD_CHAIN_ID
+  ) {
+    endpoint = "0x6F475642a6e85809B1c36Fa62763669b1b48DD5B";
+  } else {
+    endpoint = LZ_ENDPOINT;
+  }
+
   const bytecode = (isTempo ? TEMPO_OFT_BYTECODE : MORGEN_BYTECODE) as `0x${string}`;
 
   if (!bytecode || bytecode === "0x" || bytecode.length < 10) {
@@ -2600,7 +2613,6 @@ const deploy = async (targetChainId: number) => {
       account: address,
     });
 
-    // name + symbol как в рабочем Hardhat-деплое
     const tokenName = name || "Morgen";
     const tokenSymbol = symbol || "MRG";
 
