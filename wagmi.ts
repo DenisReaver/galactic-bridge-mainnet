@@ -38,10 +38,28 @@ const tempoMainnet = {
   },
 } as const;
 
+// Robinhood Chain Mainnet
+const robinhoodMainnet = {
+  id: 4663,
+  name: 'Robinhood Chain',
+  nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  rpcUrls: {
+    default: {
+      http: ['https://rpc.mainnet.chain.robinhood.com'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'Blockscout',
+      url: 'https://robinhoodchain.blockscout.com',
+    },
+  },
+} as const;
+
 export const config = getDefaultConfig({
   appName: 'Galactic Bridge',
   projectId: '6cd43074381dca42cc0f029143e150c8',
-  chains: [mainnet, base, optimism, arbitrum, arcMainnet, tempoMainnet],
+  chains: [mainnet, base, optimism, arbitrum, arcMainnet, tempoMainnet, robinhoodMainnet],
   transports: {
     [mainnet.id]: http('https://0xrpc.io/eth'),
     [base.id]: http('https://mainnet.base.org'),
@@ -49,6 +67,7 @@ export const config = getDefaultConfig({
     [arbitrum.id]: http('https://arbitrum.drpc.org'),
     [arcMainnet.id]: http('https://rpc-main-1.archiechain.io'),
     [tempoMainnet.id]: http('https://rpc.mainnet.tempo.xyz'),
+    [robinhoodMainnet.id]: http('https://rpc.mainnet.chain.robinhood.com'),
   },
   ssr: true,
 });
