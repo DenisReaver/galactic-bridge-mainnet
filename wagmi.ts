@@ -64,7 +64,7 @@ export const config = getDefaultConfig({
     [mainnet.id]: http('https://0xrpc.io/eth'),
     [base.id]: http('https://base-rpc.publicnode.com'),
     [optimism.id]: http('https://mainnet.optimism.io'),
-    [arbitrum.id]: http('https://arbitrum.drpc.org'),
+    [arbitrum.id]: http('https://public.1rpc.io/arb'),
     [arcMainnet.id]: http('https://rpc-main-1.archiechain.io'),
     [tempoMainnet.id]: http('https://rpc.mainnet.tempo.xyz'),
     [robinhoodMainnet.id]: http('https://rpc.mainnet.chain.robinhood.com'),
