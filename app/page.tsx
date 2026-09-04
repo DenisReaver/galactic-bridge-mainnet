@@ -3060,12 +3060,20 @@ const sendToken = async () => {
     });
 
     const amountLD = parseUnits(sendAmount, 18);
+
+    // ==================== ВАЖНО: всегда даём options ====================
+    // Для Tempo ставим 2_000_000 газа, для остальных 200_000
+    const gasForDest = (toNetwork === "tempo") ? 2_000_000 : 200_000;
+    
+    // Правильные Type-3 options для lzReceive
+    const extraOptions = ("0x000301001101" + gasForDest.toString(16).padStart(32, "0")) as `0x${string}`;
+
     const sendParam = {
       dstEid,
       to: `0x000000000000000000000000${recipient.slice(2)}` as `0x${string}`,
       amountLD,
       minAmountLD: (amountLD * BigInt(950)) / BigInt(1000),
-      extraOptions: "0x" as `0x${string}`,
+      extraOptions,                    // ← теперь не "0x"
       composeMsg: "0x" as `0x${string}`,
       oftCmd: "0x" as `0x${string}`,
     };
@@ -3083,15 +3091,14 @@ const sendToken = async () => {
       : BigInt((quote as any)?.nativeFee ?? 0);
 
     if (nativeFee === BigInt(0)) {
-      throw new Error("nativeFee = 0. Check Set Peer, DVN config & Enforced Options.");
+      throw new Error("nativeFee = 0. Check Set Peer + DVN config.");
     }
 
-    // ========== TEMPO: fee in LZD ==========
+    // ========== TEMPO SPECIAL ==========
     if (srcChainId === TEMPO_CHAIN_ID) {
       const feeWithBuffer = (nativeFee * BigInt(110)) / BigInt(100);
 
-      // 1) approve pathUSD → LZD
-      alert("1/4 Approve pathUSD for LZD wrap...");
+      alert("1/4 Approve pathUSD for LZD...");
       let hash = await client.writeContract({
         address: PATH_USD,
         abi: ERC20_ABI,
@@ -3100,7 +3107,6 @@ const sendToken = async () => {
       });
       await publicClient!.waitForTransactionReceipt({ hash, timeout: 300_000 });
 
-      // 2) wrap pathUSD → LZD
       alert("2/4 Wrap pathUSD → LZD...");
       hash = await client.writeContract({
         address: LZD_ADDRESS,
@@ -3110,8 +3116,7 @@ const sendToken = async () => {
       });
       await publicClient!.waitForTransactionReceipt({ hash, timeout: 300_000 });
 
-      // 3) approve LZD → OFT
-      alert("3/4 Approve LZD for OFT fee...");
+      alert("3/4 Approve LZD for OFT...");
       hash = await client.writeContract({
         address: LZD_ADDRESS,
         abi: ERC20_ABI,
@@ -3120,8 +3125,7 @@ const sendToken = async () => {
       });
       await publicClient!.waitForTransactionReceipt({ hash, timeout: 300_000 });
 
-      // 4) send value=0
-      alert("4/4 Send via LayerZero...");
+      alert("4/4 Sending...");
       hash = await client.writeContract({
         address: srcAddress as `0x${string}`,
         abi: OFT_ABI,
@@ -3130,11 +3134,11 @@ const sendToken = async () => {
         value: BigInt(0),
       });
       setLastTxHash?.(hash);
-      alert(`✅ Sent from Tempo!\nHash: ${hash}\nhttps://layerzeroscan.com/tx/${hash}`);
+      alert(`✅ Sent from Tempo!\nhttps://layerzeroscan.com/tx/${hash}`);
       return;
     }
 
-    // ========== NORMAL EVM: pay nativeFee in ETH ==========
+    // ========== NORMAL EVM ==========
     const hash = await client.writeContract({
       address: srcAddress as `0x${string}`,
       abi: OFT_ABI,
@@ -3144,7 +3148,7 @@ const sendToken = async () => {
     });
 
     setLastTxHash?.(hash);
-    alert(`✅ Transaction sent!\nHash: ${hash}\nhttps://layerzeroscan.com/tx/${hash}`);
+    alert(`✅ Transaction sent!\nhttps://layerzeroscan.com/tx/${hash}`);
   } catch (error: any) {
     console.error(error);
     alert(`Send failed: ${error?.shortMessage || error?.message || error}`);
